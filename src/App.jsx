@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import { Routes, Route, useNavigate } from 'react-router-dom';
 import Admin from './components/Admin';
 import Navbar from './components/Navbar';
 import ProjectCard from './components/ProjectCard';
@@ -46,105 +47,14 @@ const skillCategories = [
   }
 ];
 
-export default function App() {
-  // 1. Default to Light Theme (White)
-  const [darkMode, setDarkMode] = useState(false);
-  const [viewAdmin, setViewAdmin] = useState(false);
-  const [viewAboutPage, setViewAboutPage] = useState(false);
-  const [token, setToken] = useState(localStorage.getItem('adminToken') || null);
-  const [selectedProject, setSelectedProject] = useState(null);
-  
-  const [projects, setProjects] = useState([]);
-  const [loadingProjects, setLoadingProjects] = useState(true);
-  const [profile, setProfile] = useState({ avatarUrl: '', bannerUrl: '', bioShort: '', bioFull: '' });
-  const [previewImage, setPreviewImage] = useState(null);
-
-  const fetchProfile = async () => {
-    try {
-      const res = await axios.get(`${API_BASE_URL}/api/profile`);
-      if (res.data) setProfile(res.data);
-    } catch (err) {
-      console.error('Failed to load profile details:', err);
-    }
-  };
-
-  const fetchProjects = async () => {
-    try {
-      setLoadingProjects(true);
-      const res = await axios.get(`${API_BASE_URL}/api/projects`);
-      setProjects(res.data);
-    } catch (err) {
-      console.error('Error loading projects:', err);
-    } finally {
-      setLoadingProjects(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchProfile();
-    fetchProjects();
-  }, []);
-
-  useEffect(() => {
-    if (darkMode) {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-    }
-  }, [darkMode]);
-
-  // Render Full About Page
-  if (viewAboutPage) {
-    return (
-      <AboutDetail
-        profile={profile}
-        onBack={() => setViewAboutPage(false)}
-        darkMode={darkMode}
-        setDarkMode={setDarkMode}
-        setViewAdmin={setViewAdmin}
-      />
-    );
-  }
-
-  // Render Case Study Page
-  if (selectedProject) {
-    return (
-      <ProjectDetail
-        project={selectedProject}
-        onBack={() => setSelectedProject(null)}
-        darkMode={darkMode}
-        setDarkMode={setDarkMode}
-        setViewAdmin={setViewAdmin}
-      />
-    );
-  }
-
-  // Render Admin View
-  if (viewAdmin) {
-    return (
-      <div>
-        <div className="bg-neutral-900 border-b border-neutral-800 p-4 text-right px-6 flex justify-between items-center">
-          <span className="text-sm font-semibold text-neutral-400">Admin Portal Mode</span>
-          <button 
-            onClick={() => setViewAdmin(false)} 
-            className="text-xs px-3 py-1.5 rounded-lg bg-sky-500/10 text-sky-400 border border-sky-500/30 hover:bg-sky-500/20 transition-all font-bold"
-          >
-            &larr; Back to Portfolio
-          </button>
-        </div>
-        <Admin token={token} setToken={setToken} darkMode={darkMode} setDarkMode={setDarkMode} />
-      </div>
-    );
-  }
-
+function Home({ darkMode, setDarkMode, profile, projects, loadingProjects, setPreviewImage, setSelectedProject, setViewAboutPage }) {
   return (
     <div className={`min-h-screen font-sans antialiased transition-colors duration-200 ${darkMode ? 'bg-black text-white' : 'bg-white text-neutral-900'}`}>
       
-      {/* Navbar with Bold Links */}
+      {/* Navbar */}
       <Navbar 
         darkMode={darkMode} 
         setDarkMode={setDarkMode} 
-        setViewAdmin={setViewAdmin} 
         onOpenAbout={() => setViewAboutPage(true)}
       />
 
@@ -171,7 +81,6 @@ export default function App() {
         </div>
 
         <div className="relative px-4 sm:px-8 text-center">
-          {/* Centered Avatar Image */}
           <div className="flex justify-center -mt-16 sm:-mt-20">
             <div 
               onClick={() => setPreviewImage(profile.avatarUrl || heroImg)}
@@ -208,7 +117,6 @@ export default function App() {
               Full-Stack Developer building practical web applications that solve real-world problems.
             </p>
 
-            {/* Action Buttons Below Subtitle */}
             <div className="pt-2 flex flex-wrap items-center justify-center gap-3">
               <a 
                 href="#contact" 
@@ -217,7 +125,6 @@ export default function App() {
                 <Send className="w-4 h-4"/> Let's Talk
               </a>
 
-              {/* WhatsApp Button */}
               <a 
                 href="https://wa.me/2347048695103" 
                 target="_blank" 
@@ -230,7 +137,6 @@ export default function App() {
                 WhatsApp
               </a>
 
-              {/* X (Twitter) Button */}
               <a 
                 href="https://x.com/X_CHAIN_G" 
                 target="_blank" 
@@ -245,7 +151,6 @@ export default function App() {
                 Follow on X
               </a>
 
-              {/* Phone Line Button */}
               <a 
                 href="tel:07048695103" 
                 className={`inline-flex items-center gap-2 font-bold px-4 py-2.5 rounded-xl border text-sm transition-all ${
@@ -259,7 +164,7 @@ export default function App() {
         </div>
       </header>
 
-      {/* Unboxed About Me Preview Section */}
+      {/* About Section */}
       <section id="about" className={`max-w-5xl mx-auto px-6 py-12 border-t ${darkMode ? 'border-neutral-900' : 'border-neutral-200'}`}>
         <h2 className="text-2xl font-bold mb-4 flex items-center gap-2">
           <User className="w-6 h-6 text-sky-500"/> About Me
@@ -277,7 +182,7 @@ export default function App() {
         </button>
       </section>
 
-      {/* Tech Stack Grid */}
+      {/* Skills Section */}
       <section id="skills" className={`max-w-5xl mx-auto px-6 py-12 border-t ${darkMode ? 'border-neutral-900' : 'border-neutral-200'}`}>
         <h2 className="text-2xl font-bold mb-8 flex items-center gap-2">
           <Wrench className="w-6 h-6 text-sky-500"/> Tech Stack & Capabilities
@@ -304,7 +209,7 @@ export default function App() {
         </div>
       </section>
 
-      {/* Projects */}
+      {/* Projects Section */}
       <section id="projects" className={`max-w-5xl mx-auto px-6 py-12 border-t ${darkMode ? 'border-neutral-900' : 'border-neutral-200'}`}>
         <h2 className="text-2xl font-bold mb-8 flex items-center gap-2">
           <Globe className="w-6 h-6 text-sky-500"/> What I've Built
@@ -345,6 +250,116 @@ export default function App() {
         <p className="font-bold text-base mb-4 text-sky-500">Direct Line: 07048695103</p>
         <p className="text-xs opacity-70">&copy; {new Date().getFullYear()} Johnny. All rights reserved.</p>
       </footer>
+    </div>
+  );
+}
+
+export default function App() {
+  const [darkMode, setDarkMode] = useState(false);
+  const [viewAboutPage, setViewAboutPage] = useState(false);
+  const [token, setToken] = useState(localStorage.getItem('adminToken') || null);
+  const [selectedProject, setSelectedProject] = useState(null);
+  
+  const [projects, setProjects] = useState([]);
+  const [loadingProjects, setLoadingProjects] = useState(true);
+  const [profile, setProfile] = useState({ avatarUrl: '', bannerUrl: '', bioShort: '', bioFull: '' });
+  const [previewImage, setPreviewImage] = useState(null);
+
+  const navigate = useNavigate();
+
+  const fetchProfile = async () => {
+    try {
+      const res = await axios.get(`${API_BASE_URL}/api/profile`);
+      if (res.data) setProfile(res.data);
+    } catch (err) {
+      console.error('Failed to load profile details:', err);
+    }
+  };
+
+  const fetchProjects = async () => {
+    try {
+      setLoadingProjects(true);
+      const res = await axios.get(`${API_BASE_URL}/api/projects`);
+      setProjects(res.data);
+    } catch (err) {
+      console.error('Error loading projects:', err);
+    } finally {
+      setLoadingProjects(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchProfile();
+    fetchProjects();
+  }, []);
+
+  useEffect(() => {
+    if (darkMode) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  }, [darkMode]);
+
+  // Modal / Detail Sub-views
+  if (viewAboutPage) {
+    return (
+      <AboutDetail
+        profile={profile}
+        onBack={() => setViewAboutPage(false)}
+        darkMode={darkMode}
+        setDarkMode={setDarkMode}
+      />
+    );
+  }
+
+  if (selectedProject) {
+    return (
+      <ProjectDetail
+        project={selectedProject}
+        onBack={() => setSelectedProject(null)}
+        darkMode={darkMode}
+        setDarkMode={setDarkMode}
+      />
+    );
+  }
+
+  return (
+    <>
+      <Routes>
+        <Route 
+          path="/" 
+          element={
+            <Home 
+              darkMode={darkMode} 
+              setDarkMode={setDarkMode}
+              profile={profile}
+              projects={projects}
+              loadingProjects={loadingProjects}
+              setPreviewImage={setPreviewImage}
+              setSelectedProject={setSelectedProject}
+              setViewAboutPage={setViewAboutPage}
+            />
+          } 
+        />
+        <Route 
+          path="/admin" 
+          element={
+            <div>
+              <div className="bg-neutral-900 border-b border-neutral-800 p-4 text-right px-6 flex justify-between items-center">
+                <span className="text-sm font-semibold text-neutral-400">Admin Portal Mode</span>
+                <button 
+                  onClick={() => navigate('/')} 
+                  className="text-xs px-3 py-1.5 rounded-lg bg-sky-500/10 text-sky-400 border border-sky-500/30 hover:bg-sky-500/20 transition-all font-bold"
+                >
+                  &larr; Back to Portfolio
+                </button>
+              </div>
+              <Admin token={token} setToken={setToken} darkMode={darkMode} setDarkMode={setDarkMode} />
+            </div>
+          } 
+        />
+      </Routes>
 
       {/* Lightbox Preview */}
       {previewImage && (
@@ -368,7 +383,6 @@ export default function App() {
           />
         </div>
       )}
-
-    </div>
+    </>
   );
 }
