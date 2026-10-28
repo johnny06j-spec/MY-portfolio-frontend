@@ -14,6 +14,8 @@ import {
   Moon
 } from 'lucide-react';
 
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+
 export default function Admin({ token, setToken, darkMode, setDarkMode }) {
   const [credentials, setCredentials] = useState({ username: '', password: '' });
   const [loginError, setLoginError] = useState('');
@@ -54,13 +56,13 @@ export default function Admin({ token, setToken, darkMode, setDarkMode }) {
 
   const fetchAdminData = async () => {
     try {
-      const projRes = await axios.get('http://localhost:5000/api/projects');
+      const projRes = await axios.get(`${API_BASE_URL}/api/projects`);
       setExistingProjects(projRes.data);
 
-      const profileRes = await axios.get('http://localhost:5000/api/profile');
+      const profileRes = await axios.get(`${API_BASE_URL}/api/profile`);
       if (profileRes.data?.bioShort) setBioShort(profileRes.data.bioShort);
 
-      const aboutRes = await axios.get('http://localhost:5000/api/about-posts');
+      const aboutRes = await axios.get(`${API_BASE_URL}/api/about-posts`);
       setExistingAboutPosts(aboutRes.data);
     } catch (err) {
       console.error('Failed to load admin data:', err);
@@ -75,7 +77,7 @@ export default function Admin({ token, setToken, darkMode, setDarkMode }) {
     e.preventDefault();
     setLoginError('');
     try {
-      const res = await axios.post('http://localhost:5000/api/auth/login', credentials);
+      const res = await axios.post(`${API_BASE_URL}/api/auth/login`, credentials);
       if (res.data.success) {
         setToken(res.data.token);
         localStorage.setItem('adminToken', res.data.token);
@@ -144,7 +146,7 @@ export default function Admin({ token, setToken, darkMode, setDarkMode }) {
     formData.append('bioShort', bioShort);
 
     try {
-      const res = await axios.post('http://localhost:5000/api/profile', formData, {
+      const res = await axios.post(`${API_BASE_URL}/api/profile`, formData, {
         headers: {
           Authorization: `Bearer ${token}`,
           'Content-Type': 'multipart/form-data',
@@ -166,7 +168,7 @@ export default function Admin({ token, setToken, darkMode, setDarkMode }) {
   const handleUpdatePin = async (postId, newPinOrder) => {
     try {
       const res = await axios.put(
-        `http://localhost:5000/api/about-posts/${postId}/pin`,
+        `${API_BASE_URL}/api/about-posts/${postId}/pin`,
         { pinOrder: newPinOrder },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -211,14 +213,14 @@ export default function Admin({ token, setToken, darkMode, setDarkMode }) {
     try {
       let res;
       if (editingAboutId) {
-        res = await axios.put(`http://localhost:5000/api/about-posts/${editingAboutId}`, formData, {
+        res = await axios.put(`${API_BASE_URL}/api/about-posts/${editingAboutId}`, formData, {
           headers: {
             Authorization: `Bearer ${token}`,
             'Content-Type': 'multipart/form-data',
           },
         });
       } else {
-        res = await axios.post('http://localhost:5000/api/about-posts', formData, {
+        res = await axios.post(`${API_BASE_URL}/api/about-posts`, formData, {
           headers: {
             Authorization: `Bearer ${token}`,
             'Content-Type': 'multipart/form-data',
@@ -265,7 +267,7 @@ export default function Admin({ token, setToken, darkMode, setDarkMode }) {
   const handleDeleteAboutPost = async (id) => {
     if (!window.confirm('Are you sure you want to delete this post?')) return;
     try {
-      await axios.delete(`http://localhost:5000/api/about-posts/${id}`, {
+      await axios.delete(`${API_BASE_URL}/api/about-posts/${id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (editingAboutId === id) resetAboutPostForm();
@@ -312,14 +314,14 @@ export default function Admin({ token, setToken, darkMode, setDarkMode }) {
     try {
       let res;
       if (editingProjectId) {
-        res = await axios.put(`http://localhost:5000/api/projects/${editingProjectId}`, formData, {
+        res = await axios.put(`${API_BASE_URL}/api/projects/${editingProjectId}`, formData, {
           headers: {
             Authorization: `Bearer ${token}`,
             'Content-Type': 'multipart/form-data',
           },
         });
       } else {
-        res = await axios.post('http://localhost:5000/api/projects', formData, {
+        res = await axios.post(`${API_BASE_URL}/api/projects`, formData, {
           headers: {
             Authorization: `Bearer ${token}`,
             'Content-Type': 'multipart/form-data',
@@ -377,7 +379,7 @@ export default function Admin({ token, setToken, darkMode, setDarkMode }) {
   const handleDeleteProject = async (id) => {
     if (!window.confirm('Are you sure you want to delete this project?')) return;
     try {
-      await axios.delete(`http://localhost:5000/api/projects/${id}`, {
+      await axios.delete(`${API_BASE_URL}/api/projects/${id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (editingProjectId === id) resetProjectForm();
@@ -463,7 +465,7 @@ export default function Admin({ token, setToken, darkMode, setDarkMode }) {
           darkMode ? 'bg-neutral-900 border-neutral-800' : 'bg-neutral-50 border-neutral-200'
         }`}>
           <h2 className="text-xl font-bold flex items-center gap-2">
-            <UserCheck className="w-5 h-5 text-sky-500" /> 1. Profile Header & Photos
+            <UserCheck className="w-5 h-5 text-sky-500" />1. Profile Header & Photos
           </h2>
 
           {headerMsg && <p className="text-sky-400 text-sm font-medium">{headerMsg}</p>}
@@ -667,9 +669,9 @@ export default function Admin({ token, setToken, darkMode, setDarkMode }) {
 
                     <div className="flex items-center gap-3 text-xs opacity-50 font-medium">
                       <span>{new Date(post.createdAt).toLocaleDateString()}</span>
-                      <span>• {post.media?.length || 0} main media file(s)</span>
+                      <span>{post.media?.length || 0} main media file(s)</span>
                       {post.threadItems?.length > 0 && (
-                        <span className="text-sky-400">• {post.threadItems.length} thread step(s)</span>
+                        <span className="text-sky-400">{post.threadItems.length} thread step(s)</span>
                       )}
                     </div>
                   </div>
