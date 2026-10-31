@@ -17,7 +17,7 @@ export default function ContactForm({ darkMode }) {
     setStatus({ loading: true, success: null, error: null });
 
     try {
-      const response = await axios.post(`${API_BASE_URL}/api/contact`, formData);
+      const response = await axios.post(`${API_BASE_URL}/api/messages`, formData);
       if (response.data.success) {
         setStatus({
           loading: false,

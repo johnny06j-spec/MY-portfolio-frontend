@@ -11,7 +11,9 @@ import {
   Edit3, 
   X, 
   Sun, 
-  Moon
+  Moon,
+  Mail,
+  CheckCircle2
 } from 'lucide-react';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
@@ -27,7 +29,10 @@ export default function Admin({ token, setToken, darkMode, setDarkMode }) {
   const [headerLoading, setHeaderLoading] = useState(false);
   const [headerMsg, setHeaderMsg] = useState('');
 
-  // 2. About Feed Post CMS State
+  // 2. Messages State
+  const [messagesList, setMessagesList] = useState([]);
+
+  // 3. About Feed Post CMS State
   const [aboutPostContent, setAboutPostContent] = useState('');
   const [aboutMediaFiles, setAboutMediaFiles] = useState([]);
   const [aboutPostLoading, setAboutPostLoading] = useState(false);
@@ -38,7 +43,7 @@ export default function Admin({ token, setToken, darkMode, setDarkMode }) {
   // Thread Steps with Per-Step Media Files
   const [threadSteps, setThreadSteps] = useState([]);
 
-  // 3. Projects State
+  // 4. Projects State
   const [title, setTitle] = useState('');
   const [category, setCategory] = useState('');
   const [description, setDescription] = useState('');
@@ -64,6 +69,11 @@ export default function Admin({ token, setToken, darkMode, setDarkMode }) {
 
       const aboutRes = await axios.get(`${API_BASE_URL}/api/about-posts`);
       setExistingAboutPosts(aboutRes.data);
+
+      const msgRes = await axios.get(`${API_BASE_URL}/api/messages`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setMessagesList(msgRes.data);
     } catch (err) {
       console.error('Failed to load admin data:', err);
     }
@@ -90,6 +100,30 @@ export default function Admin({ token, setToken, darkMode, setDarkMode }) {
   const handleLogout = () => {
     setToken(null);
     localStorage.removeItem('adminToken');
+  };
+
+  // --- MESSAGE HANDLERS ---
+  const handleToggleRead = async (id) => {
+    try {
+      await axios.put(`${API_BASE_URL}/api/messages/${id}/read`, {}, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      fetchAdminData();
+    } catch (err) {
+      console.error('Failed to update message status:', err);
+    }
+  };
+
+  const handleDeleteMessage = async (id) => {
+    if (!window.confirm('Delete this message?')) return;
+    try {
+      await axios.delete(`${API_BASE_URL}/api/messages/${id}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      fetchAdminData();
+    } catch (err) {
+      alert('Failed to delete message.');
+    }
   };
 
   // --- ABOUT THREAD HANDLERS ---
@@ -439,7 +473,7 @@ export default function Admin({ token, setToken, darkMode, setDarkMode }) {
         <div className={`flex justify-between items-center border-b pb-6 ${darkMode ? 'border-neutral-800' : 'border-neutral-200'}`}>
           <div>
             <h1 className="text-3xl font-bold">Portfolio Control Center</h1>
-            <p className="opacity-60 text-sm">Manage projects, profile details, and publish thread posts.</p>
+            <p className="opacity-60 text-sm">Manage projects, profile details, messages, and publish thread posts.</p>
           </div>
           <div className="flex items-center gap-3">
             {setDarkMode && (
@@ -460,12 +494,84 @@ export default function Admin({ token, setToken, darkMode, setDarkMode }) {
           </div>
         </div>
 
-        {/* SECTION 1: PROFILE HEADER & PHOTOS */}
+        {/* SECTION 1: INCOMING MESSAGES */}
+        <div className={`p-8 border rounded-2xl space-y-4 ${
+          darkMode ? 'bg-neutral-900 border-neutral-800' : 'bg-neutral-50 border-neutral-200'
+        }`}>
+          <div className="flex justify-between items-center">
+            <h2 className="text-xl font-bold flex items-center gap-2">
+              <Mail className="w-5 h-5 text-sky-500" />
+              Incoming Messages ({messagesList.length})
+            </h2>
+            <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-sky-500/10 text-sky-400 border border-sky-500/20">
+              Unread: {messagesList.filter((m) => !m.read).length}
+            </span>
+          </div>
+
+          {messagesList.length === 0 ? (
+            <p className="text-sm opacity-50">No contact messages received yet.</p>
+          ) : (
+            <div className="space-y-3">
+              {messagesList.map((msg) => (
+                <div
+                  key={msg._id}
+                  className={`p-4 border rounded-xl space-y-2 transition-all ${
+                    msg.read
+                      ? darkMode ? 'bg-black/50 border-neutral-800 opacity-70' : 'bg-white/50 border-neutral-200 opacity-70'
+                      : darkMode ? 'bg-black border-sky-500/50 ring-1 ring-sky-500/30' : 'bg-white border-sky-500/50 ring-1 ring-sky-500/30'
+                  }`}
+                >
+                  <div className="flex justify-between items-start gap-4">
+                    <div>
+                      <h3 className="font-bold text-sm flex items-center gap-2">
+                        {msg.name}
+                        {!msg.read && (
+                          <span className="w-2 h-2 rounded-full bg-sky-500 inline-block" title="Unread Message"></span>
+                        )}
+                      </h3>
+                      <a href={`mailto:${msg.email}`} className="text-xs text-sky-400 hover:underline">
+                        {msg.email}
+                      </a>
+                    </div>
+                    <span className="text-xs opacity-50 font-medium">
+                      {new Date(msg.createdAt).toLocaleString()}
+                    </span>
+                  </div>
+
+                  <p className="text-sm whitespace-pre-line opacity-90 leading-relaxed">{msg.message}</p>
+
+                  <div className="flex justify-end items-center gap-2 pt-2 border-t border-neutral-800/40">
+                    <button
+                      onClick={() => handleToggleRead(msg._id)}
+                      className={`text-xs px-3 py-1.5 rounded-xl border font-semibold transition-all flex items-center gap-1 ${
+                        msg.read
+                          ? 'bg-neutral-800 text-neutral-400 border-neutral-700 hover:bg-neutral-700'
+                          : 'bg-sky-500/10 text-sky-400 border-sky-500/30 hover:bg-sky-500/20'
+                      }`}
+                    >
+                      <CheckCircle2 className="w-3.5 h-3.5" />
+                      {msg.read ? 'Mark Unread' : 'Mark Read'}
+                    </button>
+                    <button
+                      onClick={() => handleDeleteMessage(msg._id)}
+                      className="text-xs px-3 py-1.5 bg-rose-500/10 text-rose-400 border border-rose-500/20 rounded-xl font-semibold hover:bg-rose-500/20 transition-all flex items-center gap-1"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" /> Delete
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* SECTION 2: PROFILE HEADER & PHOTOS */}
         <form onSubmit={handleUpdateHeaderPhotos} className={`p-8 border rounded-2xl space-y-4 ${
           darkMode ? 'bg-neutral-900 border-neutral-800' : 'bg-neutral-50 border-neutral-200'
         }`}>
           <h2 className="text-xl font-bold flex items-center gap-2">
-            <UserCheck className="w-5 h-5 text-sky-500" />1. Profile Header & Photos
+            <UserCheck className="w-5 h-5 text-sky-500" />
+            Profile Header & Photos
           </h2>
 
           {headerMsg && <p className="text-sky-400 text-sm font-medium">{headerMsg}</p>}
@@ -517,14 +623,14 @@ export default function Admin({ token, setToken, darkMode, setDarkMode }) {
           </button>
         </form>
 
-        {/* SECTION 2: ABOUT PAGE THREAD PUBLISHER */}
+        {/* SECTION 3: ABOUT PAGE THREAD PUBLISHER */}
         <form onSubmit={handlePublishOrUpdateAboutPost} className={`p-8 border rounded-2xl space-y-6 ${
           darkMode ? 'bg-neutral-900 border-neutral-800' : 'bg-neutral-50 border-neutral-200'
         }`}>
           <div className="flex justify-between items-center">
             <h2 className="text-xl font-bold flex items-center gap-2">
               <Send className="w-5 h-5 text-sky-500" />
-              {editingAboutId ? 'Edit Post / Thread' : '2. Publish X-Style Thread Post'}
+              {editingAboutId ? 'Edit Post / Thread' : 'Publish X-Style Thread Post'}
             </h2>
             {editingAboutId && (
               <button
@@ -713,14 +819,14 @@ export default function Admin({ token, setToken, darkMode, setDarkMode }) {
           </div>
         )}
 
-        {/* SECTION 3: ADD OR EDIT PROJECT WITH THREAD UPDATES */}
+        {/* SECTION 4: ADD OR EDIT PROJECT WITH THREAD UPDATES */}
         <form onSubmit={handlePublishOrUpdateProject} className={`p-8 border rounded-2xl space-y-6 ${
           darkMode ? 'bg-neutral-900 border-neutral-800' : 'bg-neutral-50 border-neutral-200'
         }`}>
           <div className="flex justify-between items-center">
             <h2 className="text-xl font-bold flex items-center gap-2">
               <PlusCircle className="w-5 h-5 text-sky-500" />
-              {editingProjectId ? 'Edit Project' : '3. Add New Project'}
+              {editingProjectId ? 'Edit Project' : 'Add New Project'}
             </h2>
             {editingProjectId && (
               <button
