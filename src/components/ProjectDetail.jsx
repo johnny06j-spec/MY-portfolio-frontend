@@ -6,24 +6,24 @@ export default function ProjectDetail({ project, onBack, darkMode }) {
   const [activeMediaIndex, setActiveMediaIndex] = useState(0);
   const mediaList = project.media || [];
 
-  // Helper to sanitize invalid asterisk syntax (e.g., "**** Text ****", "** Text ")
+  // Helper to ensure proper bold spacing
   const formatMarkdownText = (text) => {
     if (!text) return '';
     return text
-      .replace(/\*{4,}/g, '**')  // Replace 4+ asterisks with double asterisks
-      .replace(/\*\*\s+/g, '**') // Strip space right after opening **
-      .replace(/\s+\*\*/g, '**'); // Strip space right before closing **
+      .replace(/\*{4,}/g, '**')
+      .replace(/\*\*\s+/g, '**')
+      .replace(/\s+\*\*/g, '**');
   };
 
-  // Explicit component styling for ReactMarkdown
+  // Custom styling rules for ReactMarkdown elements
   const markdownComponents = {
     p: ({ children }) => (
-      <p className={`text-sm leading-relaxed mb-4 ${darkMode ? 'text-neutral-300' : 'text-neutral-700'}`}>
+      <div className={`text-sm leading-relaxed mb-4 whitespace-pre-line ${darkMode ? 'text-neutral-300' : 'text-neutral-700'}`}>
         {children}
-      </p>
+      </div>
     ),
     strong: ({ children }) => (
-      <strong className={`font-extrabold ${darkMode ? 'text-white' : 'text-neutral-900'}`}>
+      <strong className={`font-extrabold block my-1 ${darkMode ? 'text-white' : 'text-neutral-900'}`}>
         {children}
       </strong>
     ),
@@ -152,7 +152,7 @@ export default function ProjectDetail({ project, onBack, darkMode }) {
                 >
                   {upd.title && <h3 className="font-bold text-lg">{upd.title}</h3>}
                   
-                  <div className="text-sm leading-relaxed">
+                  <div className="text-sm leading-relaxed whitespace-pre-line">
                     <ReactMarkdown components={markdownComponents}>
                       {formatMarkdownText(upd.description)}
                     </ReactMarkdown>
