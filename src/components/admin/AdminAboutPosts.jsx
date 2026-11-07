@@ -25,7 +25,7 @@ export default function AdminAboutPosts({
   return (
     <>
       {/* THREAD PUBLISHER FORM */}
-      <form onSubmit={handlePublishOrUpdateAboutPost} className={`p-8 border rounded-2xl space-y-6 ${
+      <form onSubmit={handlePublishOrUpdateAboutPost} className={`p-4 sm:p-8 border rounded-2xl space-y-6 ${
         darkMode ? 'bg-neutral-900 border-neutral-800' : 'bg-neutral-50 border-neutral-200'
       }`}>
         <div className="flex justify-between items-center">
@@ -80,7 +80,7 @@ export default function AdminAboutPosts({
         </div>
 
         {threadSteps.map((step, idx) => (
-          <div key={idx} className="relative pl-6 border-l-2 border-sky-500/40 space-y-3">
+          <div key={idx} className="relative pl-4 sm:pl-6 border-l-2 border-sky-500/40 space-y-3">
             <div className="flex justify-between items-center">
               <label className="block text-xs font-bold uppercase text-sky-400">
                 Thread Post #{idx + 2}
@@ -141,12 +141,12 @@ export default function AdminAboutPosts({
 
       {/* MANAGE ABOUT POSTS LIST */}
       {existingAboutPosts.length > 0 && (
-        <div className={`p-8 border rounded-2xl space-y-4 ${
+        <div className={`p-4 sm:p-8 border rounded-2xl space-y-4 ${
           darkMode ? 'bg-neutral-900 border-neutral-800' : 'bg-neutral-50 border-neutral-200'
         }`}>
           <div className="flex justify-between items-center">
             <h3 className="text-lg font-bold">Manage Published Posts ({existingAboutPosts.length})</h3>
-            <span className="text-xs opacity-50">Double-click to cycle Pin order</span>
+            <span className="text-xs opacity-50 hidden sm:inline">Double-click to cycle Pin order</span>
           </div>
 
           <div className="space-y-3">
@@ -164,17 +164,17 @@ export default function AdminAboutPosts({
                 }`}
                 title="Double-click to cycle Pin position"
               >
-                <div className="space-y-2 flex-1">
-                  <div className="flex items-center gap-2">
+                <div className="space-y-2 flex-1 min-w-0 w-full">
+                  <div className="flex items-center gap-2 flex-wrap">
                     {post.pinOrder > 0 && (
-                      <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-500/10 text-amber-400 border border-amber-500/30 flex items-center gap-1">
+                      <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-500/10 text-amber-400 border border-amber-500/30 flex items-center gap-1 shrink-0">
                         📌 Pinned #{post.pinOrder}
                       </span>
                     )}
-                    <p className="text-sm font-medium line-clamp-2">{post.content}</p>
+                    <p className="text-sm font-medium line-clamp-2 break-words">{post.content}</p>
                   </div>
 
-                  <div className="flex items-center gap-3 text-xs opacity-50 font-medium">
+                  <div className="flex items-center gap-3 text-xs opacity-50 font-medium flex-wrap">
                     <span>{new Date(post.createdAt).toLocaleDateString()}</span>
                     <span>{post.media?.length || 0} main media file(s)</span>
                     {post.threadItems?.length > 0 && (
@@ -183,7 +183,7 @@ export default function AdminAboutPosts({
                   </div>
                 </div>
 
-                <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
+                <div className="flex items-center gap-2 w-full sm:w-auto justify-end shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-neutral-800/20">
                   <select
                     value={post.pinOrder || 0}
                     onChange={(e) => handleUpdatePin(post._id, Number(e.target.value))}
@@ -200,18 +200,18 @@ export default function AdminAboutPosts({
 
                   <button
                     onClick={() => handleStartEditAboutPost(post)}
-                    className="p-2 bg-sky-500/10 text-sky-400 border border-sky-500/20 rounded-xl hover:bg-sky-500/20 text-xs font-bold transition-all flex items-center gap-1"
+                    className="px-3 py-2 bg-sky-500/10 text-sky-400 border border-sky-500/20 rounded-xl hover:bg-sky-500/20 text-xs font-bold transition-all flex items-center gap-1"
                     title="Edit Post"
                   >
-                    <Edit3 className="w-4 h-4" /> Edit
+                    <Edit3 className="w-3.5 h-3.5" /> Edit
                   </button>
 
                   <button
                     onClick={() => handleDeleteAboutPost(post._id)}
-                    className="p-2 bg-rose-500/10 text-rose-400 border border-rose-500/20 rounded-xl hover:bg-rose-500/20 text-xs font-bold transition-all flex items-center gap-1"
+                    className="px-3 py-2 bg-rose-500/10 text-rose-400 border border-rose-500/20 rounded-xl hover:bg-rose-500/20 text-xs font-bold transition-all flex items-center gap-1"
                     title="Delete Post"
                   >
-                    <Trash2 className="w-4 h-4" /> Delete
+                    <Trash2 className="w-3.5 h-3.5" /> Delete
                   </button>
                 </div>
               </div>

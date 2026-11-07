@@ -33,7 +33,7 @@ export default function AdminProjects({
   return (
     <>
       {/* ADD OR EDIT PROJECT FORM */}
-      <form onSubmit={handlePublishOrUpdateProject} className={`p-8 border rounded-2xl space-y-6 ${
+      <form onSubmit={handlePublishOrUpdateProject} className={`p-4 sm:p-8 border rounded-2xl space-y-6 ${
         darkMode ? 'bg-neutral-900 border-neutral-800' : 'bg-neutral-50 border-neutral-200'
       }`}>
         <div className="flex justify-between items-center">
@@ -97,7 +97,7 @@ export default function AdminProjects({
 
         {/* Chained Project Updates / Thread Cards */}
         {projectUpdates.map((upd, idx) => (
-          <div key={idx} className="relative pl-6 border-l-2 border-sky-500/40 space-y-3">
+          <div key={idx} className="relative pl-4 sm:pl-6 border-l-2 border-sky-500/40 space-y-3">
             <div className="flex justify-between items-center">
               <label className="block text-xs font-bold uppercase text-sky-400">
                 Project Update Card #{idx + 1}
@@ -176,31 +176,37 @@ export default function AdminProjects({
         </button>
       </form>
 
-      {/* MANAGE PROJECTS LIST */}
-      <div className={`p-8 border rounded-2xl space-y-4 ${
+      {/* MANAGE PROJECTS LIST (RESPONSIVE FOR ALL SCREEN SIZES) */}
+      <div className={`p-4 sm:p-8 border rounded-2xl space-y-4 ${
         darkMode ? 'bg-neutral-900 border-neutral-800' : 'bg-neutral-50 border-neutral-200'
       }`}>
         <h2 className="text-xl font-bold">Manage Published Projects ({existingProjects.length})</h2>
         <div className="space-y-3">
           {existingProjects.map((proj) => (
-            <div key={proj._id} className={`flex justify-between items-center p-4 border rounded-xl transition-all ${
+            <div key={proj._id} className={`flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 border rounded-xl gap-3 transition-all ${
               darkMode 
                 ? `bg-black ${editingProjectId === proj._id ? 'border-sky-500 ring-1 ring-sky-500' : 'border-neutral-800'}`
                 : `bg-white ${editingProjectId === proj._id ? 'border-sky-500 ring-1 ring-sky-500' : 'border-neutral-200'}`
             }`}>
-              <div>
-                <h3 className="font-bold text-lg">{proj.title}</h3>
-                <p className="text-xs opacity-60">
+              <div className="space-y-1 min-w-0 flex-1 w-full">
+                <h3 className="font-bold text-base sm:text-lg break-words">{proj.title}</h3>
+                <p className="text-xs opacity-60 leading-relaxed break-words">
                   {proj.category} • {proj.media?.length || 0} Media items
                   {proj.projectUpdates?.length > 0 && ` • ${proj.projectUpdates.length} update card(s)`}
                 </p>
               </div>
-              <div className="flex items-center gap-2">
-                <button onClick={() => handleStartEditProject(proj)} className="p-2.5 bg-sky-500/10 text-sky-400 border border-sky-500/20 rounded-xl hover:bg-sky-500/20 flex items-center gap-1.5 text-xs font-bold transition-all">
-                  <Edit3 className="w-4 h-4" /> Edit
+              <div className="flex items-center gap-2 shrink-0 w-full sm:w-auto justify-end pt-2 sm:pt-0 border-t sm:border-t-0 border-neutral-800/20">
+                <button 
+                  onClick={() => handleStartEditProject(proj)} 
+                  className="px-3 py-2 bg-sky-500/10 text-sky-400 border border-sky-500/20 rounded-xl hover:bg-sky-500/20 flex items-center gap-1.5 text-xs font-bold transition-all"
+                >
+                  <Edit3 className="w-3.5 h-3.5" /> Edit
                 </button>
-                <button onClick={() => handleDeleteProject(proj._id)} className="p-2.5 bg-rose-500/10 text-rose-400 border border-rose-500/20 rounded-xl hover:bg-rose-500/20 flex items-center gap-1.5 text-xs font-bold transition-all">
-                  <Trash2 className="w-4 h-4" /> Delete
+                <button 
+                  onClick={() => handleDeleteProject(proj._id)} 
+                  className="px-3 py-2 bg-rose-500/10 text-rose-400 border border-rose-500/20 rounded-xl hover:bg-rose-500/20 flex items-center gap-1.5 text-xs font-bold transition-all"
+                >
+                  <Trash2 className="w-3.5 h-3.5" /> Delete
                 </button>
               </div>
             </div>
