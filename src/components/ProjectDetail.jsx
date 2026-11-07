@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import ReactMarkdown from 'react-markdown';
 import { ArrowLeft, ExternalLink, Globe, CheckCircle2, Layers } from 'lucide-react';
 
 export default function ProjectDetail({ project, onBack, darkMode }) {
@@ -30,9 +31,10 @@ export default function ProjectDetail({ project, onBack, darkMode }) {
             {project.category}
           </span>
           <h1 className="text-3xl sm:text-5xl font-extrabold tracking-tight">{project.title}</h1>
-          <p className={`text-lg leading-relaxed max-w-2xl ${darkMode ? 'text-neutral-400' : 'text-neutral-600'}`}>
-            {project.description}
-          </p>
+          
+          <div className={`text-lg leading-relaxed max-w-none whitespace-pre-line ${darkMode ? 'text-neutral-400' : 'text-neutral-600'}`}>
+            <ReactMarkdown>{project.description}</ReactMarkdown>
+          </div>
           
           {project.liveUrl && (
             <div className="pt-2">
@@ -118,9 +120,10 @@ export default function ProjectDetail({ project, onBack, darkMode }) {
                   }`}
                 >
                   {upd.title && <h3 className="font-bold text-lg">{upd.title}</h3>}
-                  <p className={`text-sm leading-relaxed ${darkMode ? 'text-neutral-300' : 'text-neutral-700'}`}>
-                    {upd.description}
-                  </p>
+                  
+                  <div className={`text-sm leading-relaxed whitespace-pre-line space-y-2 ${darkMode ? 'text-neutral-300' : 'text-neutral-700'}`}>
+                    <ReactMarkdown>{upd.description}</ReactMarkdown>
+                  </div>
 
                   {/* Update Media Showcase */}
                   {upd.media && upd.media.length > 0 && (
