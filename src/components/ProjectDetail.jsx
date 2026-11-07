@@ -6,6 +6,35 @@ export default function ProjectDetail({ project, onBack, darkMode }) {
   const [activeMediaIndex, setActiveMediaIndex] = useState(0);
   const mediaList = project.media || [];
 
+  // Helper to sanitize invalid asterisk syntax (e.g., "**** Text ****", "** Text ")
+  const formatMarkdownText = (text) => {
+    if (!text) return '';
+    return text
+      .replace(/\*{4,}/g, '**')  // Replace 4+ asterisks with double asterisks
+      .replace(/\*\*\s+/g, '**') // Strip space right after opening **
+      .replace(/\s+\*\*/g, '**'); // Strip space right before closing **
+  };
+
+  // Explicit component styling for ReactMarkdown
+  const markdownComponents = {
+    p: ({ children }) => (
+      <p className={`text-sm leading-relaxed mb-4 ${darkMode ? 'text-neutral-300' : 'text-neutral-700'}`}>
+        {children}
+      </p>
+    ),
+    strong: ({ children }) => (
+      <strong className={`font-extrabold ${darkMode ? 'text-white' : 'text-neutral-900'}`}>
+        {children}
+      </strong>
+    ),
+    ul: ({ children }) => (
+      <ul className="list-disc pl-5 space-y-1 mb-4">{children}</ul>
+    ),
+    li: ({ children }) => (
+      <li className={darkMode ? 'text-neutral-300' : 'text-neutral-700'}>{children}</li>
+    ),
+  };
+
   return (
     <div className={`min-h-screen transition-colors duration-200 ${
       darkMode ? 'bg-black text-white' : 'bg-white text-neutral-900'
@@ -32,8 +61,10 @@ export default function ProjectDetail({ project, onBack, darkMode }) {
           </span>
           <h1 className="text-3xl sm:text-5xl font-extrabold tracking-tight">{project.title}</h1>
           
-          <div className={`text-lg leading-relaxed max-w-none whitespace-pre-line ${darkMode ? 'text-neutral-400' : 'text-neutral-600'}`}>
-            <ReactMarkdown>{project.description}</ReactMarkdown>
+          <div className="text-base leading-relaxed max-w-none">
+            <ReactMarkdown components={markdownComponents}>
+              {formatMarkdownText(project.description)}
+            </ReactMarkdown>
           </div>
           
           {project.liveUrl && (
@@ -121,8 +152,10 @@ export default function ProjectDetail({ project, onBack, darkMode }) {
                 >
                   {upd.title && <h3 className="font-bold text-lg">{upd.title}</h3>}
                   
-                  <div className={`text-sm leading-relaxed whitespace-pre-line space-y-2 ${darkMode ? 'text-neutral-300' : 'text-neutral-700'}`}>
-                    <ReactMarkdown>{upd.description}</ReactMarkdown>
+                  <div className="text-sm leading-relaxed">
+                    <ReactMarkdown components={markdownComponents}>
+                      {formatMarkdownText(upd.description)}
+                    </ReactMarkdown>
                   </div>
 
                   {/* Update Media Showcase */}
