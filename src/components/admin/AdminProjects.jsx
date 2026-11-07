@@ -30,6 +30,34 @@ export default function AdminProjects({
   resetProjectForm,
   handleDeleteProject
 }) {
+
+  // Reusable keyboard shortcut for Ctrl+B bolding text inside any textarea
+  const handleKeyDownBold = (e, updateValueCallback) => {
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'b') {
+      e.preventDefault();
+      const textarea = e.target;
+      const start = textarea.selectionStart;
+      const end = textarea.selectionEnd;
+      const selectedText = textarea.value.substring(start, end);
+
+      if (selectedText) {
+        const replacement = `**${selectedText}**`;
+        const newText = 
+          textarea.value.substring(0, start) + 
+          replacement + 
+          textarea.value.substring(end);
+        
+        updateValueCallback(newText);
+
+        // Restore cursor/selection around the newly bolded text after React re-renders
+        setTimeout(() => {
+          textarea.focus();
+          textarea.setSelectionRange(start, start + replacement.length);
+        }, 0);
+      }
+    }
+  };
+
   return (
     <>
       {/* ADD OR EDIT PROJECT FORM */}
@@ -72,10 +100,21 @@ export default function AdminProjects({
         </div>
 
         <div>
-          <label className="block text-xs font-bold uppercase mb-1 opacity-70">Main Description</label>
-          <textarea rows="3" required value={description} onChange={(e) => setDescription(e.target.value)} className={`w-full px-4 py-2.5 rounded-xl border focus:outline-none focus:border-sky-500 ${
-            darkMode ? 'bg-black border-neutral-800 text-white' : 'bg-white border-neutral-300 text-black'
-          }`}></textarea>
+          <div className="flex justify-between items-center mb-1">
+            <label className="block text-xs font-bold uppercase opacity-70">Main Description</label>
+            <span className="text-[10px] text-sky-400 font-semibold">Tip: Select text & press Ctrl+B to bold</span>
+          </div>
+          <textarea
+            rows="3"
+            required
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            onKeyDown={(e) => handleKeyDownBold(e, setDescription)}
+            placeholder="Main project overview... (Highlight text & press Ctrl+B to bold)"
+            className={`w-full px-4 py-2.5 rounded-xl border focus:outline-none focus:border-sky-500 ${
+              darkMode ? 'bg-black border-neutral-800 text-white' : 'bg-white border-neutral-300 text-black'
+            }`}
+          ></textarea>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -122,10 +161,11 @@ export default function AdminProjects({
             />
 
             <textarea
-              rows="3"
+              rows="4"
               value={upd.description}
               onChange={(e) => handleProjectUpdateChange(idx, 'description', e.target.value)}
-              placeholder="Detail what was built or changed in this update..."
+              onKeyDown={(e) => handleKeyDownBold(e, (val) => handleProjectUpdateChange(idx, 'description', val))}
+              placeholder="Detail what was built or changed in this update... (Highlight text & press Ctrl+B to bold)"
               className={`w-full px-4 py-3 rounded-xl border focus:outline-none focus:border-sky-500 text-sm ${
                 darkMode ? 'bg-black border-neutral-800 text-white' : 'bg-white border-neutral-300 text-black'
               }`}
@@ -176,7 +216,7 @@ export default function AdminProjects({
         </button>
       </form>
 
-      {/* MANAGE PROJECTS LIST (RESPONSIVE FOR ALL SCREEN SIZES) */}
+      {/* MANAGE PROJECTS LIST */}
       <div className={`p-4 sm:p-8 border rounded-2xl space-y-4 ${
         darkMode ? 'bg-neutral-900 border-neutral-800' : 'bg-neutral-50 border-neutral-200'
       }`}>
