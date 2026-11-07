@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import Navbar from './Navbar';
@@ -17,13 +16,16 @@ import {
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
-export default function AboutDetail({ profile, onBack, darkMode, setDarkMode, setViewAdmin }) {
+export default function AboutDetail({ profile, onBack, darkMode, setDarkMode, setViewAdmin, onCloseAbout }) {
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [openCommentsPostId, setOpenCommentsPostId] = useState(null);
   const [commentText, setCommentText] = useState('');
   const [commentAuthor, setCommentAuthor] = useState('');
   const [previewMedia, setPreviewMedia] = useState(null);
+
+  // Use onBack as the fallback if onCloseAbout isn't explicitly passed
+  const handleCloseView = onCloseAbout || onBack;
 
   const fetchPosts = async () => {
     try {
@@ -138,11 +140,17 @@ export default function AboutDetail({ profile, onBack, darkMode, setDarkMode, se
 
   return (
     <div className={`min-h-screen ${darkMode ? 'bg-black text-white' : 'bg-white text-neutral-900'}`}>
-      <Navbar darkMode={darkMode} setDarkMode={setDarkMode} setViewAdmin={setViewAdmin} />
+      {/* FIXED: Passing onCloseAbout into Navbar so clicking any link closes the About view and navigates to the section */}
+      <Navbar 
+        darkMode={darkMode} 
+        setDarkMode={setDarkMode} 
+        setViewAdmin={setViewAdmin} 
+        onCloseAbout={handleCloseView}
+      />
 
       <div className="max-w-2xl mx-auto px-4 sm:px-6 py-10 space-y-8">
         <button
-          onClick={onBack}
+          onClick={handleCloseView}
           className={`inline-flex items-center gap-2 text-sm font-bold px-4 py-2 rounded-xl border transition-all ${
             darkMode 
               ? 'bg-neutral-900 border-neutral-800 text-neutral-300 hover:text-sky-400' 
