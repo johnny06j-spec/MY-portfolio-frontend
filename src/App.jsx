@@ -7,7 +7,6 @@ import ProjectCard from './components/ProjectCard';
 import ProjectDetail from './components/ProjectDetail';
 import AboutDetail from './components/AboutDetail';
 import ContactForm from './components/ContactForm';
-import Footer from './components/Footer';
 import heroImg from './assets/hero.png';
 import { 
   Phone, 
@@ -49,6 +48,13 @@ const skillCategories = [
 ];
 
 function Home({ darkMode, setDarkMode, profile, projects, loadingProjects, setPreviewImage, setSelectedProject, setViewAboutPage }) {
+  const scrollToContact = () => {
+    const contactSection = document.getElementById('contact');
+    if (contactSection) {
+      contactSection.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
   return (
     <div className={`min-h-screen font-sans antialiased transition-colors duration-200 ${darkMode ? 'bg-black text-white' : 'bg-white text-neutral-900'}`}>
       
@@ -245,8 +251,107 @@ function Home({ darkMode, setDarkMode, profile, projects, loadingProjects, setPr
         <ContactForm darkMode={darkMode} />
       </section>
 
-      {/* Modern Card Footer */}
-      <Footer darkMode={darkMode} />
+      {/* Updated Footer Section */}
+      <footer className={`border-t transition-colors duration-200 ${
+        darkMode ? 'bg-black border-neutral-800 text-white' : 'bg-white border-neutral-200 text-neutral-900'
+      }`}>
+        <div className="max-w-5xl mx-auto px-6 py-12">
+          {/* Main 3-Column Content Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-start pb-10 border-b border-neutral-200 dark:border-neutral-800">
+            
+            {/* Column 1: Brand & Tagline */}
+            <div className="space-y-3">
+              <h2 className="font-extrabold tracking-tight text-2xl">
+                Johnny<span className="text-sky-500">.dev</span>
+              </h2>
+              <p className="text-sm opacity-70 max-w-xs leading-relaxed">
+                Building modern solutions for a smarter tomorrow.
+              </p>
+              <div className="w-12 h-1 bg-sky-500 rounded-full mt-2"></div>
+            </div>
+
+            {/* Column 2: Connect Socials (WhatsApp, X, Discord) */}
+            <div className="flex flex-col items-start md:items-center space-y-4">
+              <h3 className="font-bold text-base">Connect</h3>
+              <div className="flex items-center gap-3">
+                {/* WhatsApp */}
+                <a
+                  href="https://wa.me/2347048695103"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={`p-3 rounded-2xl border transition-all flex items-center justify-center ${
+                    darkMode
+                      ? 'bg-neutral-900 border-neutral-800 text-white hover:bg-neutral-800 hover:border-emerald-500'
+                      : 'bg-neutral-100 border-neutral-200 text-neutral-800 hover:bg-neutral-200 hover:border-emerald-500'
+                  }`}
+                  title="WhatsApp"
+                >
+                  <svg className="w-5 h-5 fill-current" viewBox="0 0 24 24">
+                    <path d="M12.031 6.172c-3.181 0-5.767 2.586-5.768 5.766-.001 1.299.432 2.503 1.163 3.473l-.8 2.923 2.993-.785c.937.602 2.051.955 3.245.956 3.18 0 5.767-2.587 5.767-5.766.001-3.181-2.585-5.767-5.600-5.767zm3.327 8.283c-.144.405-.837.774-1.17.823-.312.045-.719.083-2.32-.577-1.921-.792-3.136-2.753-3.232-2.881-.096-.128-.775-1.033-.775-1.97 0-.937.489-1.398.663-1.59.175-.192.383-.24.512-.24.128 0 .256 0 .368.008.112.008.272-.043.424.321.16.385.544 1.329.592 1.425.048.096.08.208.016.336-.064.128-.096.208-.192.32-.096.112-.202.25-.288.336-.096.096-.197.202-.085.395.112.192.498.822 1.069 1.331.734.654 1.353.857 1.545.953.192.096.304.08.416-.048.112-.128.48-.56.608-.752.128-.192.256-.16.432-.096.176.064 1.12.528 1.312.624.192.096.32.144.368.224.048.08.048.464-.096.869z"/>
+                  </svg>
+                </a>
+
+                {/* X / Twitter */}
+                <a
+                  href="https://x.com/X_CHAIN_G"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={`p-3 rounded-2xl border transition-all flex items-center justify-center font-bold text-lg w-11 h-11 ${
+                    darkMode
+                      ? 'bg-neutral-900 border-neutral-800 text-white hover:bg-neutral-800 hover:border-sky-500'
+                      : 'bg-neutral-100 border-neutral-200 text-neutral-800 hover:bg-neutral-200 hover:border-sky-500'
+                  }`}
+                  title="X (Twitter)"
+                >
+                  𝕏
+                </a>
+
+                {/* Discord */}
+                <a
+                  href="https://discord.com"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={`p-3 rounded-2xl border transition-all flex items-center justify-center ${
+                    darkMode
+                      ? 'bg-neutral-900 border-neutral-800 text-white hover:bg-neutral-800 hover:border-indigo-500'
+                      : 'bg-neutral-100 border-neutral-200 text-neutral-800 hover:bg-neutral-200 hover:border-indigo-500'
+                  }`}
+                  title="Discord"
+                >
+                  <svg className="w-5 h-5 fill-current" viewBox="0 0 24 24">
+                    <path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.462-.63.874-1.295 1.226-1.994.021-.041.001-.09-.041-.106a13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.061 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.028zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z"/>
+                  </svg>
+                </a>
+              </div>
+            </div>
+
+            {/* Column 3: Call to Action */}
+            <div className="space-y-4 md:text-right flex flex-col items-start md:items-end">
+              <div>
+                <h3 className="font-bold text-base">Have a project in mind?</h3>
+                <p className="text-xs opacity-70 mt-1">
+                  Let's connect and build something great together.
+                </p>
+              </div>
+              <button
+                onClick={scrollToContact}
+                className="px-6 py-3 bg-sky-500 hover:bg-sky-600 text-white font-bold rounded-2xl text-sm transition-all flex items-center gap-2 shadow-md shadow-sky-500/20"
+              >
+                <Send className="w-4 h-4" /> Send a Message
+              </button>
+            </div>
+          </div>
+
+          {/* Bottom Bar: Copyright & Availability Status */}
+          <div className="pt-6 flex flex-col sm:flex-row justify-between items-center gap-4 text-xs opacity-70">
+            <p>© 2026 Johnny. All rights reserved.</p>
+            <div className="flex items-center gap-2 font-medium">
+              <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
+              <span className="text-emerald-500 dark:text-emerald-400 font-semibold">Available for new projects</span>
+            </div>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 }
