@@ -1,10 +1,34 @@
 import React, { useState } from 'react';
 import { Sun, Moon, Menu, X } from 'lucide-react';
 
-export default function Navbar({ darkMode, setDarkMode, onOpenAbout }) {
+export default function Navbar({ darkMode, setDarkMode, onOpenAbout, onCloseAbout }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const closeMenu = () => setMobileMenuOpen(false);
+
+  const handleNavClick = (e, sectionId) => {
+    e.preventDefault();
+    closeMenu();
+
+    // If on the dedicated About view, close it first to return to the home layout
+    if (onCloseAbout) {
+      onCloseAbout();
+    }
+
+    // Scroll to section on the home layout after view swap
+    setTimeout(() => {
+      if (sectionId === 'home') {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      } else {
+        const element = document.getElementById(sectionId);
+        if (element) {
+          element.scrollIntoView({ behavior: 'smooth' });
+        } else {
+          window.location.href = `/#${sectionId}`;
+        }
+      }
+    }, 50);
+  };
 
   return (
     <nav className={`sticky top-0 z-50 backdrop-blur-md border-b transition-colors duration-200 ${
@@ -13,28 +37,48 @@ export default function Navbar({ darkMode, setDarkMode, onOpenAbout }) {
       <div className="max-w-5xl mx-auto px-6 py-4 flex justify-between items-center">
         
         {/* Brand Logo */}
-        <a href="#" onClick={closeMenu} className="font-extrabold tracking-tight text-xl">
+        <a 
+          href="/#home" 
+          onClick={(e) => handleNavClick(e, 'home')} 
+          className="font-extrabold tracking-tight text-xl"
+        >
           Johnny<span className="text-sky-500">.dev</span>
         </a>
         
         {/* Desktop Links */}
         <div className="hidden md:flex items-center gap-8 text-sm font-bold">
-          <a href="#" className={`transition-colors ${darkMode ? 'text-neutral-300 hover:text-white' : 'text-neutral-700 hover:text-black'}`}>
+          <a 
+            href="/#home" 
+            onClick={(e) => handleNavClick(e, 'home')}
+            className={`transition-colors ${darkMode ? 'text-neutral-300 hover:text-white' : 'text-neutral-700 hover:text-black'}`}
+          >
             Home
           </a>
           <button 
-            onClick={() => { onOpenAbout && onOpenAbout(); closeMenu(); }} 
+            onClick={() => { if (onOpenAbout) onOpenAbout(); closeMenu(); }} 
             className={`font-bold transition-colors ${darkMode ? 'text-neutral-300 hover:text-white' : 'text-neutral-700 hover:text-black'}`}
           >
             About
           </button>
-          <a href="#skills" className={`transition-colors ${darkMode ? 'text-neutral-300 hover:text-white' : 'text-neutral-700 hover:text-black'}`}>
+          <a 
+            href="/#skills" 
+            onClick={(e) => handleNavClick(e, 'skills')}
+            className={`transition-colors ${darkMode ? 'text-neutral-300 hover:text-white' : 'text-neutral-700 hover:text-black'}`}
+          >
             Capabilities
           </a>
-          <a href="#projects" className={`transition-colors ${darkMode ? 'text-neutral-300 hover:text-white' : 'text-neutral-700 hover:text-black'}`}>
+          <a 
+            href="/#projects" 
+            onClick={(e) => handleNavClick(e, 'projects')}
+            className={`transition-colors ${darkMode ? 'text-neutral-300 hover:text-white' : 'text-neutral-700 hover:text-black'}`}
+          >
             Projects
           </a>
-          <a href="#contact" className={`transition-colors ${darkMode ? 'text-neutral-300 hover:text-white' : 'text-neutral-700 hover:text-black'}`}>
+          <a 
+            href="/#contact" 
+            onClick={(e) => handleNavClick(e, 'contact')}
+            className={`transition-colors ${darkMode ? 'text-neutral-300 hover:text-white' : 'text-neutral-700 hover:text-black'}`}
+          >
             Contact
           </a>
         </div>
@@ -70,35 +114,35 @@ export default function Navbar({ darkMode, setDarkMode, onOpenAbout }) {
           darkMode ? 'bg-black border-neutral-800 text-white' : 'bg-white border-neutral-200 text-black'
         }`}>
           <a 
-            href="#" 
-            onClick={closeMenu} 
+            href="/#home" 
+            onClick={(e) => handleNavClick(e, 'home')} 
             className="block text-base font-bold py-1 hover:text-sky-500 transition-colors"
           >
             Home
           </a>
           <button 
-            onClick={() => { onOpenAbout && onOpenAbout(); closeMenu(); }} 
+            onClick={() => { if (onOpenAbout) onOpenAbout(); closeMenu(); }} 
             className="block text-base font-bold py-1 hover:text-sky-500 transition-colors text-left w-full"
           >
             About
           </button>
           <a 
-            href="#skills" 
-            onClick={closeMenu} 
+            href="/#skills" 
+            onClick={(e) => handleNavClick(e, 'skills')} 
             className="block text-base font-bold py-1 hover:text-sky-500 transition-colors"
           >
             Capabilities
           </a>
           <a 
-            href="#projects" 
-            onClick={closeMenu} 
+            href="/#projects" 
+            onClick={(e) => handleNavClick(e, 'projects')} 
             className="block text-base font-bold py-1 hover:text-sky-500 transition-colors"
           >
             Projects
           </a>
           <a 
-            href="#contact" 
-            onClick={closeMenu} 
+            href="/#contact" 
+            onClick={(e) => handleNavClick(e, 'contact')} 
             className="block text-base font-bold py-1 hover:text-sky-500 transition-colors"
           >
             Contact
