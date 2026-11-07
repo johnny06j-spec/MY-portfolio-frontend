@@ -1,20 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { 
-  Lock, 
-  PlusCircle, 
-  LogOut, 
-  Upload, 
-  Trash2, 
-  UserCheck, 
-  Send, 
-  Edit3, 
-  X, 
-  Sun, 
-  Moon,
-  Mail,
-  CheckCircle2
-} from 'lucide-react';
+import { Lock, LogOut, Sun, Moon } from 'lucide-react';
+
+import AdminMessages from './admin/AdminMessages';
+import AdminProfileHeader from './admin/AdminProfileHeader';
+import AdminAboutPosts from './admin/AdminAboutPosts';
+import AdminProjects from './admin/AdminProjects';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
@@ -39,8 +30,6 @@ export default function Admin({ token, setToken, darkMode, setDarkMode }) {
   const [aboutPostMsg, setAboutPostMsg] = useState('');
   const [existingAboutPosts, setExistingAboutPosts] = useState([]);
   const [editingAboutId, setEditingAboutId] = useState(null);
-
-  // Thread Steps with Per-Step Media Files
   const [threadSteps, setThreadSteps] = useState([]);
 
   // 4. Projects State
@@ -55,8 +44,6 @@ export default function Admin({ token, setToken, darkMode, setDarkMode }) {
   const [message, setMessage] = useState('');
   const [existingProjects, setExistingProjects] = useState([]);
   const [editingProjectId, setEditingProjectId] = useState(null);
-
-  // Project Thread Updates State
   const [projectUpdates, setProjectUpdates] = useState([]);
 
   const fetchAdminData = async () => {
@@ -495,505 +482,78 @@ export default function Admin({ token, setToken, darkMode, setDarkMode }) {
         </div>
 
         {/* SECTION 1: INCOMING MESSAGES */}
-        <div className={`p-8 border rounded-2xl space-y-4 ${
-          darkMode ? 'bg-neutral-900 border-neutral-800' : 'bg-neutral-50 border-neutral-200'
-        }`}>
-          <div className="flex justify-between items-center">
-            <h2 className="text-xl font-bold flex items-center gap-2">
-              <Mail className="w-5 h-5 text-sky-500" />
-              Incoming Messages ({messagesList.length})
-            </h2>
-            <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-sky-500/10 text-sky-400 border border-sky-500/20">
-              Unread: {messagesList.filter((m) => !m.read).length}
-            </span>
-          </div>
-
-          {messagesList.length === 0 ? (
-            <p className="text-sm opacity-50">No contact messages received yet.</p>
-          ) : (
-            <div className="space-y-3">
-              {messagesList.map((msg) => (
-                <div
-                  key={msg._id}
-                  className={`p-4 border rounded-xl space-y-2 transition-all ${
-                    msg.read
-                      ? darkMode ? 'bg-black/50 border-neutral-800 opacity-70' : 'bg-white/50 border-neutral-200 opacity-70'
-                      : darkMode ? 'bg-black border-sky-500/50 ring-1 ring-sky-500/30' : 'bg-white border-sky-500/50 ring-1 ring-sky-500/30'
-                  }`}
-                >
-                  <div className="flex justify-between items-start gap-4">
-                    <div>
-                      <h3 className="font-bold text-sm flex items-center gap-2">
-                        {msg.name}
-                        {!msg.read && (
-                          <span className="w-2 h-2 rounded-full bg-sky-500 inline-block" title="Unread Message"></span>
-                        )}
-                      </h3>
-                      <a href={`mailto:${msg.email}`} className="text-xs text-sky-400 hover:underline">
-                        {msg.email}
-                      </a>
-                    </div>
-                    <span className="text-xs opacity-50 font-medium">
-                      {new Date(msg.createdAt).toLocaleString()}
-                    </span>
-                  </div>
-
-                  <p className="text-sm whitespace-pre-line opacity-90 leading-relaxed">{msg.message}</p>
-
-                  <div className="flex justify-end items-center gap-2 pt-2 border-t border-neutral-800/40">
-                    <button
-                      onClick={() => handleToggleRead(msg._id)}
-                      className={`text-xs px-3 py-1.5 rounded-xl border font-semibold transition-all flex items-center gap-1 ${
-                        msg.read
-                          ? 'bg-neutral-800 text-neutral-400 border-neutral-700 hover:bg-neutral-700'
-                          : 'bg-sky-500/10 text-sky-400 border-sky-500/30 hover:bg-sky-500/20'
-                      }`}
-                    >
-                      <CheckCircle2 className="w-3.5 h-3.5" />
-                      {msg.read ? 'Mark Unread' : 'Mark Read'}
-                    </button>
-                    <button
-                      onClick={() => handleDeleteMessage(msg._id)}
-                      className="text-xs px-3 py-1.5 bg-rose-500/10 text-rose-400 border border-rose-500/20 rounded-xl font-semibold hover:bg-rose-500/20 transition-all flex items-center gap-1"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" /> Delete
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
+        <AdminMessages
+          messagesList={messagesList}
+          darkMode={darkMode}
+          handleToggleRead={handleToggleRead}
+          handleDeleteMessage={handleDeleteMessage}
+        />
 
         {/* SECTION 2: PROFILE HEADER & PHOTOS */}
-        <form onSubmit={handleUpdateHeaderPhotos} className={`p-8 border rounded-2xl space-y-4 ${
-          darkMode ? 'bg-neutral-900 border-neutral-800' : 'bg-neutral-50 border-neutral-200'
-        }`}>
-          <h2 className="text-xl font-bold flex items-center gap-2">
-            <UserCheck className="w-5 h-5 text-sky-500" />
-            Profile Header & Photos
-          </h2>
-
-          {headerMsg && <p className="text-sky-400 text-sm font-medium">{headerMsg}</p>}
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-xs font-bold uppercase mb-1 opacity-70">Avatar Photo</label>
-              <input
-                type="file"
-                accept="image/*"
-                onChange={(e) => setAvatarFile(e.target.files[0])}
-                className={`w-full px-4 py-2 rounded-xl border file:mr-4 file:py-1 file:px-3 file:rounded-lg file:border-0 file:bg-sky-500 file:text-white file:font-semibold text-xs ${
-                  darkMode ? 'bg-black border-neutral-800 text-white' : 'bg-white border-neutral-300 text-black'
-                }`}
-              />
-            </div>
-
-            <div>
-              <label className="block text-xs font-bold uppercase mb-1 opacity-70">Banner Image</label>
-              <input
-                type="file"
-                accept="image/*"
-                onChange={(e) => setBannerFile(e.target.files[0])}
-                className={`w-full px-4 py-2 rounded-xl border file:mr-4 file:py-1 file:px-3 file:rounded-lg file:border-0 file:bg-sky-500 file:text-white file:font-semibold text-xs ${
-                  darkMode ? 'bg-black border-neutral-800 text-white' : 'bg-white border-neutral-300 text-black'
-                }`}
-              />
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-xs font-bold uppercase mb-1 opacity-70">Short Preview Bio</label>
-            <textarea
-              rows="2"
-              value={bioShort}
-              onChange={(e) => setBioShort(e.target.value)}
-              className={`w-full px-4 py-2.5 rounded-xl border focus:outline-none focus:border-sky-500 text-sm ${
-                darkMode ? 'bg-black border-neutral-800 text-white' : 'bg-white border-neutral-300 text-black'
-              }`}
-            ></textarea>
-          </div>
-
-          <button
-            type="submit"
-            disabled={headerLoading}
-            className="px-6 py-2.5 bg-sky-500 hover:bg-sky-600 disabled:opacity-50 text-white font-bold rounded-xl text-sm transition-all"
-          >
-            {headerLoading ? 'Saving...' : 'Save Photos & Short Bio'}
-          </button>
-        </form>
+        <AdminProfileHeader
+          darkMode={darkMode}
+          bioShort={bioShort}
+          setBioShort={setBioShort}
+          setAvatarFile={setAvatarFile}
+          setBannerFile={setBannerFile}
+          headerLoading={headerLoading}
+          headerMsg={headerMsg}
+          handleUpdateHeaderPhotos={handleUpdateHeaderPhotos}
+        />
 
         {/* SECTION 3: ABOUT PAGE THREAD PUBLISHER */}
-        <form onSubmit={handlePublishOrUpdateAboutPost} className={`p-8 border rounded-2xl space-y-6 ${
-          darkMode ? 'bg-neutral-900 border-neutral-800' : 'bg-neutral-50 border-neutral-200'
-        }`}>
-          <div className="flex justify-between items-center">
-            <h2 className="text-xl font-bold flex items-center gap-2">
-              <Send className="w-5 h-5 text-sky-500" />
-              {editingAboutId ? 'Edit Post / Thread' : 'Publish X-Style Thread Post'}
-            </h2>
-            {editingAboutId && (
-              <button
-                type="button"
-                onClick={resetAboutPostForm}
-                className={`flex items-center gap-1 text-xs px-3 py-1 rounded-lg border ${
-                  darkMode ? 'bg-neutral-800 text-neutral-300 border-neutral-700' : 'bg-neutral-200 text-neutral-800 border-neutral-300'
-                }`}
-              >
-                <X className="w-3.5 h-3.5" /> Cancel Edit
-              </button>
-            )}
-          </div>
+        <AdminAboutPosts
+          darkMode={darkMode}
+          aboutPostContent={aboutPostContent}
+          setAboutPostContent={setAboutPostContent}
+          aboutMediaFiles={aboutMediaFiles}
+          setAboutMediaFiles={setAboutMediaFiles}
+          aboutPostLoading={aboutPostLoading}
+          aboutPostMsg={aboutPostMsg}
+          existingAboutPosts={existingAboutPosts}
+          editingAboutId={editingAboutId}
+          threadSteps={threadSteps}
+          handleAddThreadStep={handleAddThreadStep}
+          handleRemoveThreadStep={handleRemoveThreadStep}
+          handleThreadStepChange={handleThreadStepChange}
+          handleThreadFilesChange={handleThreadFilesChange}
+          handlePublishOrUpdateAboutPost={handlePublishOrUpdateAboutPost}
+          handleStartEditAboutPost={handleStartEditAboutPost}
+          resetAboutPostForm={resetAboutPostForm}
+          handleDeleteAboutPost={handleDeleteAboutPost}
+          handleUpdatePin={handleUpdatePin}
+        />
 
-          {aboutPostMsg && <p className="text-sky-400 text-sm font-medium">{aboutPostMsg}</p>}
-
-          <div className="space-y-3">
-            <label className="block text-xs font-bold uppercase opacity-70">
-              Thread Post #1 (Main Post)
-            </label>
-            <textarea
-              rows="4"
-              required
-              value={aboutPostContent}
-              onChange={(e) => setAboutPostContent(e.target.value)}
-              placeholder="Start your thread post..."
-              className={`w-full px-4 py-3 rounded-xl border focus:outline-none focus:border-sky-500 text-sm ${
-                darkMode ? 'bg-black border-neutral-800 text-white' : 'bg-white border-neutral-300 text-black'
-              }`}
-            ></textarea>
-
-            <div>
-              <label className="block text-xs font-semibold mb-1 opacity-60">
-                Main Post Media (Images / Videos)
-              </label>
-              <input
-                type="file"
-                multiple
-                accept="image/*,video/*"
-                onChange={(e) => setAboutMediaFiles(e.target.files)}
-                className={`w-full px-4 py-2 rounded-xl border file:mr-4 file:py-1 file:px-3 file:rounded-lg file:border-0 file:bg-sky-500 file:text-white file:font-semibold text-xs ${
-                  darkMode ? 'bg-black border-neutral-800 text-white' : 'bg-white border-neutral-300 text-black'
-                }`}
-              />
-            </div>
-          </div>
-
-          {threadSteps.map((step, idx) => (
-            <div key={idx} className="relative pl-6 border-l-2 border-sky-500/40 space-y-3">
-              <div className="flex justify-between items-center">
-                <label className="block text-xs font-bold uppercase text-sky-400">
-                  Thread Post #{idx + 2}
-                </label>
-                <button
-                  type="button"
-                  onClick={() => handleRemoveThreadStep(idx)}
-                  className="text-xs text-rose-400 hover:underline flex items-center gap-1"
-                >
-                  <X className="w-3 h-3" /> Remove
-                </button>
-              </div>
-
-              <textarea
-                rows="3"
-                value={step.content}
-                onChange={(e) => handleThreadStepChange(idx, e.target.value)}
-                placeholder={`Add part ${idx + 2} to your thread...`}
-                className={`w-full px-4 py-3 rounded-xl border focus:outline-none focus:border-sky-500 text-sm ${
-                  darkMode ? 'bg-black border-neutral-800 text-white' : 'bg-white border-neutral-300 text-black'
-                }`}
-              ></textarea>
-
-              <div>
-                <label className="block text-xs font-semibold mb-1 opacity-60">
-                  Thread Post #{idx + 2} Media (Attach image/video for this step)
-                </label>
-                <input
-                  type="file"
-                  multiple
-                  accept="image/*,video/*"
-                  onChange={(e) => handleThreadFilesChange(idx, e.target.files)}
-                  className={`w-full px-4 py-2 rounded-xl border file:mr-4 file:py-1 file:px-3 file:rounded-lg file:border-0 file:bg-sky-500 file:text-white file:font-semibold text-xs ${
-                    darkMode ? 'bg-black border-neutral-800 text-white' : 'bg-white border-neutral-300 text-black'
-                  }`}
-                />
-              </div>
-            </div>
-          ))}
-
-          <button
-            type="button"
-            onClick={handleAddThreadStep}
-            className="inline-flex items-center gap-1.5 text-xs font-bold text-sky-400 hover:text-sky-300 px-3 py-1.5 rounded-xl bg-sky-500/10 border border-sky-500/20"
-          >
-            <PlusCircle className="w-4 h-4" /> Add to Thread
-          </button>
-
-          <button
-            type="submit"
-            disabled={aboutPostLoading || (!aboutPostContent.trim() && aboutMediaFiles.length === 0)}
-            className="px-6 py-2.5 bg-sky-500 hover:bg-sky-600 disabled:opacity-50 text-white font-bold rounded-xl text-sm transition-all flex items-center gap-2"
-          >
-            <Send className="w-4 h-4" />
-            {aboutPostLoading ? 'Publishing...' : editingAboutId ? 'Update Thread' : 'Publish Thread'}
-          </button>
-        </form>
-
-        {/* MANAGE ABOUT POSTS */}
-        {existingAboutPosts.length > 0 && (
-          <div className={`p-8 border rounded-2xl space-y-4 ${
-            darkMode ? 'bg-neutral-900 border-neutral-800' : 'bg-neutral-50 border-neutral-200'
-          }`}>
-            <div className="flex justify-between items-center">
-              <h3 className="text-lg font-bold">Manage Published Posts ({existingAboutPosts.length})</h3>
-              <span className="text-xs opacity-50">Double-click to cycle Pin order</span>
-            </div>
-
-            <div className="space-y-3">
-              {existingAboutPosts.map((post) => (
-                <div
-                  key={post._id}
-                  onDoubleClick={() => {
-                    const nextPin = post.pinOrder === 0 ? 1 : post.pinOrder === 1 ? 2 : post.pinOrder === 2 ? 3 : 0;
-                    handleUpdatePin(post._id, nextPin);
-                  }}
-                  className={`p-4 border rounded-xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 transition-all cursor-pointer ${
-                    darkMode 
-                      ? `bg-black ${editingAboutId === post._id ? 'border-sky-500 ring-1 ring-sky-500' : 'border-neutral-800 hover:border-neutral-700'}`
-                      : `bg-white ${editingAboutId === post._id ? 'border-sky-500 ring-1 ring-sky-500' : 'border-neutral-200 hover:border-neutral-300'}`
-                  }`}
-                  title="Double-click to cycle Pin position"
-                >
-                  <div className="space-y-2 flex-1">
-                    <div className="flex items-center gap-2">
-                      {post.pinOrder > 0 && (
-                        <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-500/10 text-amber-400 border border-amber-500/30 flex items-center gap-1">
-                          📌 Pinned #{post.pinOrder}
-                        </span>
-                      )}
-                      <p className="text-sm font-medium line-clamp-2">{post.content}</p>
-                    </div>
-
-                    <div className="flex items-center gap-3 text-xs opacity-50 font-medium">
-                      <span>{new Date(post.createdAt).toLocaleDateString()}</span>
-                      <span>{post.media?.length || 0} main media file(s)</span>
-                      {post.threadItems?.length > 0 && (
-                        <span className="text-sky-400">{post.threadItems.length} thread step(s)</span>
-                      )}
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
-                    <select
-                      value={post.pinOrder || 0}
-                      onChange={(e) => handleUpdatePin(post._id, Number(e.target.value))}
-                      className={`px-2 py-1.5 rounded-xl border text-xs font-bold text-amber-400 focus:outline-none focus:border-amber-500 cursor-pointer ${
-                        darkMode ? 'bg-neutral-900 border-neutral-800' : 'bg-neutral-100 border-neutral-300'
-                      }`}
-                    >
-                      <option value={0}>Unpinned</option>
-                      <option value={1}>📌 Pin #1</option>
-                      <option value={2}>📌 Pin #2</option>
-                      <option value={3}>📌 Pin #3</option>
-                      <option value={4}>📌 Pin #4</option>
-                    </select>
-
-                    <button
-                      onClick={() => handleStartEditAboutPost(post)}
-                      className="p-2 bg-sky-500/10 text-sky-400 border border-sky-500/20 rounded-xl hover:bg-sky-500/20 text-xs font-bold transition-all flex items-center gap-1"
-                      title="Edit Post"
-                    >
-                      <Edit3 className="w-4 h-4" /> Edit
-                    </button>
-
-                    <button
-                      onClick={() => handleDeleteAboutPost(post._id)}
-                      className="p-2 bg-rose-500/10 text-rose-400 border border-rose-500/20 rounded-xl hover:bg-rose-500/20 text-xs font-bold transition-all flex items-center gap-1"
-                      title="Delete Post"
-                    >
-                      <Trash2 className="w-4 h-4" /> Delete
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* SECTION 4: ADD OR EDIT PROJECT WITH THREAD UPDATES */}
-        <form onSubmit={handlePublishOrUpdateProject} className={`p-8 border rounded-2xl space-y-6 ${
-          darkMode ? 'bg-neutral-900 border-neutral-800' : 'bg-neutral-50 border-neutral-200'
-        }`}>
-          <div className="flex justify-between items-center">
-            <h2 className="text-xl font-bold flex items-center gap-2">
-              <PlusCircle className="w-5 h-5 text-sky-500" />
-              {editingProjectId ? 'Edit Project' : 'Add New Project'}
-            </h2>
-            {editingProjectId && (
-              <button
-                type="button"
-                onClick={resetProjectForm}
-                className={`flex items-center gap-1 text-xs px-3 py-1 rounded-lg border ${
-                  darkMode ? 'bg-neutral-800 text-neutral-300 border-neutral-700' : 'bg-neutral-200 text-neutral-800 border-neutral-300'
-                }`}
-              >
-                <X className="w-3.5 h-3.5" /> Cancel Edit
-              </button>
-            )}
-          </div>
-
-          {message && <p className="text-sky-400 text-sm font-medium">{message}</p>}
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-xs font-bold uppercase mb-1 opacity-70">Project Title</label>
-              <input type="text" required value={title} onChange={(e) => setTitle(e.target.value)} className={`w-full px-4 py-2.5 rounded-xl border focus:outline-none focus:border-sky-500 ${
-                darkMode ? 'bg-black border-neutral-800 text-white' : 'bg-white border-neutral-300 text-black'
-              }`} />
-            </div>
-            <div>
-              <label className="block text-xs font-bold uppercase mb-1 opacity-70">Category</label>
-              <input type="text" required value={category} onChange={(e) => setCategory(e.target.value)} placeholder="Full-Stack Web App" className={`w-full px-4 py-2.5 rounded-xl border focus:outline-none focus:border-sky-500 placeholder-neutral-500 ${
-                darkMode ? 'bg-black border-neutral-800 text-white' : 'bg-white border-neutral-300 text-black'
-              }`} />
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-xs font-bold uppercase mb-1 opacity-70">Main Description</label>
-            <textarea rows="3" required value={description} onChange={(e) => setDescription(e.target.value)} className={`w-full px-4 py-2.5 rounded-xl border focus:outline-none focus:border-sky-500 ${
-              darkMode ? 'bg-black border-neutral-800 text-white' : 'bg-white border-neutral-300 text-black'
-            }`}></textarea>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-xs font-bold uppercase mb-1 opacity-70">Live URL</label>
-              <input type="url" required value={liveUrl} onChange={(e) => setLiveUrl(e.target.value)} className={`w-full px-4 py-2.5 rounded-xl border focus:outline-none focus:border-sky-500 ${
-                darkMode ? 'bg-black border-neutral-800 text-white' : 'bg-white border-neutral-300 text-black'
-              }`} />
-            </div>
-            <div>
-              <label className="block text-xs font-bold uppercase mb-1 opacity-70">
-                Main Showcase Media (Images / Videos)
-              </label>
-              <input type="file" multiple accept="image/*,video/*" onChange={(e) => setMediaFiles(e.target.files)} className={`w-full px-4 py-2 rounded-xl border file:mr-4 file:py-1 file:px-3 file:rounded-lg file:border-0 file:bg-sky-500 file:text-white file:font-semibold text-xs ${
-                darkMode ? 'bg-black border-neutral-800 text-white' : 'bg-white border-neutral-300 text-black'
-              }`} />
-            </div>
-          </div>
-
-          {/* Chained Project Updates / Thread Cards */}
-          {projectUpdates.map((upd, idx) => (
-            <div key={idx} className="relative pl-6 border-l-2 border-sky-500/40 space-y-3">
-              <div className="flex justify-between items-center">
-                <label className="block text-xs font-bold uppercase text-sky-400">
-                  Project Update Card #{idx + 1}
-                </label>
-                <button
-                  type="button"
-                  onClick={() => handleRemoveProjectUpdate(idx)}
-                  className="text-xs text-rose-400 hover:underline flex items-center gap-1"
-                >
-                  <X className="w-3 h-3" /> Remove
-                </button>
-              </div>
-
-              <input
-                type="text"
-                value={upd.title}
-                onChange={(e) => handleProjectUpdateChange(idx, 'title', e.target.value)}
-                placeholder="Update Title (e.g. Database Architecture or v2 Release)"
-                className={`w-full px-4 py-2 rounded-xl border focus:outline-none focus:border-sky-500 text-sm ${
-                  darkMode ? 'bg-black border-neutral-800 text-white' : 'bg-white border-neutral-300 text-black'
-                }`}
-              />
-
-              <textarea
-                rows="3"
-                value={upd.description}
-                onChange={(e) => handleProjectUpdateChange(idx, 'description', e.target.value)}
-                placeholder="Detail what was built or changed in this update..."
-                className={`w-full px-4 py-3 rounded-xl border focus:outline-none focus:border-sky-500 text-sm ${
-                  darkMode ? 'bg-black border-neutral-800 text-white' : 'bg-white border-neutral-300 text-black'
-                }`}
-              ></textarea>
-
-              <div>
-                <label className="block text-xs font-semibold mb-1 opacity-60">
-                  Update #{idx + 1} Media File(s)
-                </label>
-                <input
-                  type="file"
-                  multiple
-                  accept="image/*,video/*"
-                  onChange={(e) => handleProjectUpdateFilesChange(idx, e.target.files)}
-                  className={`w-full px-4 py-2 rounded-xl border file:mr-4 file:py-1 file:px-3 file:rounded-lg file:border-0 file:bg-sky-500 file:text-white file:font-semibold text-xs ${
-                    darkMode ? 'bg-black border-neutral-800 text-white' : 'bg-white border-neutral-300 text-black'
-                  }`}
-                />
-              </div>
-            </div>
-          ))}
-
-          <button
-            type="button"
-            onClick={handleAddProjectUpdate}
-            className="inline-flex items-center gap-1.5 text-xs font-bold text-sky-400 hover:text-sky-300 px-3 py-1.5 rounded-xl bg-sky-500/10 border border-sky-500/20"
-          >
-            <PlusCircle className="w-4 h-4" /> Add Project Thread Update
-          </button>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-xs font-bold uppercase mb-1 opacity-70">Tags (comma-separated)</label>
-              <input type="text" value={tags} onChange={(e) => setTags(e.target.value)} placeholder="React, Node.js, Express, MongoDB" className={`w-full px-4 py-2.5 rounded-xl border focus:outline-none focus:border-sky-500 placeholder-neutral-500 ${
-                darkMode ? 'bg-black border-neutral-800 text-white' : 'bg-white border-neutral-300 text-black'
-              }`} />
-            </div>
-            <div>
-              <label className="block text-xs font-bold uppercase mb-1 opacity-70">Highlights / Features (comma-separated)</label>
-              <input type="text" value={highlights} onChange={(e) => setHighlights(e.target.value)} placeholder="Portal integration, Online payments, Custom CMS" className={`w-full px-4 py-2.5 rounded-xl border focus:outline-none focus:border-sky-500 placeholder-neutral-500 ${
-                darkMode ? 'bg-black border-neutral-800 text-white' : 'bg-white border-neutral-300 text-black'
-              }`} />
-            </div>
-          </div>
-
-          <button type="submit" disabled={loading} className="w-full py-3 bg-sky-500 hover:bg-sky-600 text-white font-bold rounded-xl transition-all disabled:opacity-50 flex items-center justify-center gap-2 shadow-md shadow-sky-500/10">
-            <Upload className="w-4 h-4" /> {loading ? 'Saving Project...' : editingProjectId ? 'Update Project' : 'Publish Project'}
-          </button>
-        </form>
-
-        {/* EXISTING PROJECTS */}
-        <div className={`p-8 border rounded-2xl space-y-4 ${
-          darkMode ? 'bg-neutral-900 border-neutral-800' : 'bg-neutral-50 border-neutral-200'
-        }`}>
-          <h2 className="text-xl font-bold">Manage Published Projects ({existingProjects.length})</h2>
-          <div className="space-y-3">
-            {existingProjects.map((proj) => (
-              <div key={proj._id} className={`flex justify-between items-center p-4 border rounded-xl transition-all ${
-                darkMode 
-                  ? `bg-black ${editingProjectId === proj._id ? 'border-sky-500 ring-1 ring-sky-500' : 'border-neutral-800'}`
-                  : `bg-white ${editingProjectId === proj._id ? 'border-sky-500 ring-1 ring-sky-500' : 'border-neutral-200'}`
-              }`}>
-                <div>
-                  <h3 className="font-bold text-lg">{proj.title}</h3>
-                  <p className="text-xs opacity-60">
-                    {proj.category} • {proj.media?.length || 0} Media items
-                    {proj.projectUpdates?.length > 0 && ` • ${proj.projectUpdates.length} update card(s)`}
-                  </p>
-                </div>
-                <div className="flex items-center gap-2">
-                  <button onClick={() => handleStartEditProject(proj)} className="p-2.5 bg-sky-500/10 text-sky-400 border border-sky-500/20 rounded-xl hover:bg-sky-500/20 flex items-center gap-1.5 text-xs font-bold transition-all">
-                    <Edit3 className="w-4 h-4" /> Edit
-                  </button>
-                  <button onClick={() => handleDeleteProject(proj._id)} className="p-2.5 bg-rose-500/10 text-rose-400 border border-rose-500/20 rounded-xl hover:bg-rose-500/20 flex items-center gap-1.5 text-xs font-bold transition-all">
-                    <Trash2 className="w-4 h-4" /> Delete
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
+        {/* SECTION 4: PROJECTS MANAGEMENT */}
+        <AdminProjects
+          darkMode={darkMode}
+          title={title}
+          setTitle={setTitle}
+          category={category}
+          setCategory={setCategory}
+          description={description}
+          setDescription={setDescription}
+          liveUrl={liveUrl}
+          setLiveUrl={setLiveUrl}
+          tags={tags}
+          setTags={setTags}
+          highlights={highlights}
+          setHighlights={setHighlights}
+          setMediaFiles={setMediaFiles}
+          loading={loading}
+          message={message}
+          existingProjects={existingProjects}
+          editingProjectId={editingProjectId}
+          projectUpdates={projectUpdates}
+          handleAddProjectUpdate={handleAddProjectUpdate}
+          handleRemoveProjectUpdate={handleRemoveProjectUpdate}
+          handleProjectUpdateChange={handleProjectUpdateChange}
+          handleProjectUpdateFilesChange={handleProjectUpdateFilesChange}
+          handlePublishOrUpdateProject={handlePublishOrUpdateProject}
+          handleStartEditProject={handleStartEditProject}
+          resetProjectForm={resetProjectForm}
+          handleDeleteProject={handleDeleteProject}
+        />
       </div>
     </div>
   );
