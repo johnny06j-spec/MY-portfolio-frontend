@@ -7,6 +7,7 @@ import ProjectCard from './components/ProjectCard';
 import ProjectDetail from './components/ProjectDetail';
 import AboutDetail from './components/AboutDetail';
 import ContactForm from './components/ContactForm';
+import Footer from './components/Footer';
 import heroImg from './assets/hero.png';
 import { 
   Phone, 
@@ -244,12 +245,8 @@ function Home({ darkMode, setDarkMode, profile, projects, loadingProjects, setPr
         <ContactForm darkMode={darkMode} />
       </section>
 
-      {/* Footer */}
-      <footer className={`max-w-5xl mx-auto px-6 py-12 border-t text-center text-sm ${darkMode ? 'border-neutral-900 text-neutral-500' : 'border-neutral-200 text-neutral-500'}`}>
-        <p className="mb-2">Need a custom web application or school portal?</p>
-        <p className="font-bold text-base mb-4 text-sky-500">Direct Line: 07048695103</p>
-        <p className="text-xs opacity-70">&copy; {new Date().getFullYear()} Johnny. All rights reserved.</p>
-      </footer>
+      {/* Modern Card Footer */}
+      <Footer darkMode={darkMode} />
     </div>
   );
 }
