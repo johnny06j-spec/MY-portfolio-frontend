@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { ArrowUpRight, BookOpen, ChevronLeft, ChevronRight, Maximize2, X, Layers } from 'lucide-react';
+import ReactMarkdown from 'react-markdown';
+import { ArrowUpRight, BookOpen, ChevronLeft, ChevronRight, Maximize2, X } from 'lucide-react';
 
 export default function ProjectCard({ project, darkMode, onViewDetail }) {
   const [activeMediaIndex, setActiveMediaIndex] = useState(0);
@@ -17,6 +18,29 @@ export default function ProjectCard({ project, darkMode, onViewDetail }) {
   };
 
   const currentMedia = mediaList[activeMediaIndex];
+
+  // Clean up double asterisks and stray spaces
+  const formatMarkdownText = (text) => {
+    if (!text) return '';
+    return text
+      .replace(/\*{4,}/g, '**')
+      .replace(/\*\*\s+/g, '**')
+      .replace(/\s+\*\*/g, '**');
+  };
+
+  // Custom styling rules for Markdown components inside ProjectCard
+  const markdownComponents = {
+    p: ({ children }) => (
+      <div className={`text-sm leading-relaxed mb-3 whitespace-pre-line ${darkMode ? 'text-neutral-400' : 'text-neutral-600'}`}>
+        {children}
+      </div>
+    ),
+    strong: ({ children }) => (
+      <strong className={`font-bold block my-1 ${darkMode ? 'text-white' : 'text-neutral-900'}`}>
+        {children}
+      </strong>
+    ),
+  };
 
   return (
     <>
@@ -142,25 +166,31 @@ export default function ProjectCard({ project, darkMode, onViewDetail }) {
               Case Study
             </button>
 
-            <a
-              href={project.liveUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className={`inline-flex items-center gap-1.5 text-sm font-semibold px-4 py-2 rounded-lg border transition-all ${
-                darkMode
-                  ? 'bg-neutral-800 hover:bg-sky-500 hover:text-white text-neutral-200 border-neutral-700'
-                  : 'bg-neutral-100 hover:bg-sky-500 hover:text-white text-neutral-800 border-neutral-300'
-              }`}
-            >
-              Live Site <ArrowUpRight className="w-4 h-4" />
-            </a>
+            {project.liveUrl && (
+              <a
+                href={project.liveUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={`inline-flex items-center gap-1.5 text-sm font-semibold px-4 py-2 rounded-lg border transition-all ${
+                  darkMode
+                    ? 'bg-neutral-800 hover:bg-sky-500 hover:text-white text-neutral-200 border-neutral-700'
+                    : 'bg-neutral-100 hover:bg-sky-500 hover:text-white text-neutral-800 border-neutral-300'
+                }`}
+              >
+                Live Site <ArrowUpRight className="w-4 h-4" />
+              </a>
+            )}
           </div>
         </div>
 
-        <p className={`leading-relaxed mb-6 ${darkMode ? 'text-neutral-400' : 'text-neutral-600'}`}>
-          {project.description}
-        </p>
+        {/* Formatted Description with ReactMarkdown */}
+        <div className="mb-6">
+          <ReactMarkdown components={markdownComponents}>
+            {formatMarkdownText(project.description)}
+          </ReactMarkdown>
+        </div>
 
+        {/* Tech Stack List */}
         <div className="flex flex-wrap gap-2">
           {project.tags &&
             project.tags.map((tag, tIdx) => (
