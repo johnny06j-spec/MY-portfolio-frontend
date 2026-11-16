@@ -1,5 +1,5 @@
-import React from 'react';
-import { Send, X, PlusCircle, Edit3, Trash2 } from 'lucide-react';
+import React, { useRef } from 'react';
+import { Send, X, PlusCircle, Edit3, Trash2, Bold } from 'lucide-react';
 
 export default function AdminAboutPosts({
   darkMode,
@@ -22,6 +22,54 @@ export default function AdminAboutPosts({
   handleUpdatePin,
   aboutMediaFiles
 }) {
+  const mainTextareaRef = useRef(null);
+  const threadTextareaRefs = useRef({});
+
+  // Helper to toggle **bold** around selected text
+  const applyBoldFormatting = (textarea, currentValue, updateCallback) => {
+    if (!textarea) return;
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const selectedText = currentValue.substring(start, end);
+
+    let newText;
+    let newCursorStart;
+    let newCursorEnd;
+
+    if (selectedText.startsWith('**') && selectedText.endsWith('**') && selectedText.length >= 4) {
+      const unwrapped = selectedText.slice(2, -2);
+      newText = currentValue.substring(0, start) + unwrapped + currentValue.substring(end);
+      newCursorStart = start;
+      newCursorEnd = start + unwrapped.length;
+    } else if (
+      currentValue.substring(start - 2, start) === '**' &&
+      currentValue.substring(end, end + 2) === '**'
+    ) {
+      newText = currentValue.substring(0, start - 2) + selectedText + currentValue.substring(end + 2);
+      newCursorStart = start - 2;
+      newCursorEnd = end - 2;
+    } else {
+      const wrapped = selectedText ? `**${selectedText}**` : '**bold text**';
+      newText = currentValue.substring(0, start) + wrapped + currentValue.substring(end);
+      newCursorStart = start + 2;
+      newCursorEnd = selectedText ? end + 2 : start + 11;
+    }
+
+    updateCallback(newText);
+
+    requestAnimationFrame(() => {
+      textarea.focus();
+      textarea.setSelectionRange(newCursorStart, newCursorEnd);
+    });
+  };
+
+  const handleKeyDownBold = (e, textarea, currentValue, updateCallback) => {
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'b') {
+      e.preventDefault();
+      applyBoldFormatting(textarea, currentValue, updateCallback);
+    }
+  };
+
   return (
     <>
       {/* THREAD PUBLISHER FORM */}
@@ -48,16 +96,34 @@ export default function AdminAboutPosts({
 
         {aboutPostMsg && <p className="text-sky-400 text-sm font-medium">{aboutPostMsg}</p>}
 
+        {/* Main Post */}
         <div className="space-y-3">
-          <label className="block text-xs font-bold uppercase opacity-70">
-            Thread Post #1 (Main Post)
-          </label>
+          <div className="flex items-center justify-between">
+            <label className="block text-xs font-bold uppercase opacity-70">
+              Thread Post #1 (Main Post)
+            </label>
+            <button
+              type="button"
+              onClick={() => applyBoldFormatting(mainTextareaRef.current, aboutPostContent, setAboutPostContent)}
+              className={`inline-flex items-center gap-1 text-xs font-bold px-2.5 py-1 rounded-lg border transition-all ${
+                darkMode
+                  ? 'bg-neutral-800 border-neutral-700 text-neutral-200 hover:border-sky-500 hover:text-sky-400'
+                  : 'bg-white border-neutral-300 text-neutral-800 hover:border-sky-500 hover:text-sky-600'
+              }`}
+              title="Bold (Ctrl+B)"
+            >
+              <Bold className="w-3.5 h-3.5" /> Bold
+            </button>
+          </div>
+
           <textarea
+            ref={mainTextareaRef}
             rows="4"
             required
             value={aboutPostContent}
             onChange={(e) => setAboutPostContent(e.target.value)}
-            placeholder="Start your thread post..."
+            onKeyDown={(e) => handleKeyDownBold(e, mainTextareaRef.current, aboutPostContent, setAboutPostContent)}
+            placeholder="Start your thread post... (Select text and press Ctrl+B to bold)"
             className={`w-full px-4 py-3 rounded-xl border focus:outline-none focus:border-sky-500 text-sm ${
               darkMode ? 'bg-black border-neutral-800 text-white' : 'bg-white border-neutral-300 text-black'
             }`}
@@ -79,26 +145,55 @@ export default function AdminAboutPosts({
           </div>
         </div>
 
+        {/* Chained Thread Steps */}
         {threadSteps.map((step, idx) => (
           <div key={idx} className="relative pl-4 sm:pl-6 border-l-2 border-sky-500/40 space-y-3">
-            <div className="flex justify-between items-center">
+            <div className="flex justify-between items-center gap-2">
               <label className="block text-xs font-bold uppercase text-sky-400">
                 Thread Post #{idx + 2}
               </label>
-              <button
-                type="button"
-                onClick={() => handleRemoveThreadStep(idx)}
-                className="text-xs text-rose-400 hover:underline flex items-center gap-1"
-              >
-                <X className="w-3 h-3" /> Remove
-              </button>
+
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() =>
+                    applyBoldFormatting(
+                      threadTextareaRefs.current[idx],
+                      step.content,
+                      (val) => handleThreadStepChange(idx, val)
+                    )
+                  }
+                  className={`inline-flex items-center gap-1 text-xs font-bold px-2.5 py-1 rounded-lg border transition-all ${
+                    darkMode
+                      ? 'bg-neutral-800 border-neutral-700 text-neutral-200 hover:border-sky-500 hover:text-sky-400'
+                      : 'bg-white border-neutral-300 text-neutral-800 hover:border-sky-500 hover:text-sky-600'
+                  }`}
+                  title="Bold (Ctrl+B)"
+                >
+                  <Bold className="w-3.5 h-3.5" /> Bold
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => handleRemoveThreadStep(idx)}
+                  className="text-xs text-rose-400 hover:underline flex items-center gap-1"
+                >
+                  <X className="w-3 h-3" /> Remove
+                </button>
+              </div>
             </div>
 
             <textarea
+              ref={(el) => (threadTextareaRefs.current[idx] = el)}
               rows="3"
               value={step.content}
               onChange={(e) => handleThreadStepChange(idx, e.target.value)}
-              placeholder={`Add part ${idx + 2} to your thread...`}
+              onKeyDown={(e) =>
+                handleKeyDownBold(e, threadTextareaRefs.current[idx], step.content, (val) =>
+                  handleThreadStepChange(idx, val)
+                )
+              }
+              placeholder={`Add part ${idx + 2} to your thread... (Ctrl+B to bold)`}
               className={`w-full px-4 py-3 rounded-xl border focus:outline-none focus:border-sky-500 text-sm ${
                 darkMode ? 'bg-black border-neutral-800 text-white' : 'bg-white border-neutral-300 text-black'
               }`}

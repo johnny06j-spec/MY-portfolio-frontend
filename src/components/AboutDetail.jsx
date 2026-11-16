@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import ReactMarkdown from 'react-markdown';
 import Navbar from './Navbar';
 import { 
   ArrowLeft, 
@@ -11,7 +12,9 @@ import {
   Send,
   Maximize2,
   X,
-  Pin
+  Pin,
+  ChevronDown,
+  ChevronUp
 } from 'lucide-react';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
@@ -23,9 +26,40 @@ export default function AboutDetail({ profile, onBack, darkMode, setDarkMode, se
   const [commentText, setCommentText] = useState('');
   const [commentAuthor, setCommentAuthor] = useState('');
   const [previewMedia, setPreviewMedia] = useState(null);
+  const [expandedPosts, setExpandedPosts] = useState({});
 
   // Use onBack as the fallback if onCloseAbout isn't explicitly passed
   const handleCloseView = onCloseAbout || onBack;
+
+  const toggleExpandPost = (postId) => {
+    setExpandedPosts((prev) => ({
+      ...prev,
+      [postId]: !prev[postId],
+    }));
+  };
+
+  // Clean up stray asterisks or spaces around bold syntax
+  const formatMarkdownText = (text) => {
+    if (!text) return '';
+    return text
+      .replace(/\*{4,}/g, '**')
+      .replace(/\*\*\s+/g, '**')
+      .replace(/\s+\*\*/g, '**');
+  };
+
+  // Inline bold styling so bold words stay within sentences
+  const markdownComponents = {
+    p: ({ children }) => (
+      <p className={`text-base leading-relaxed mb-3 whitespace-pre-line ${darkMode ? 'text-neutral-200' : 'text-neutral-800'}`}>
+        {children}
+      </p>
+    ),
+    strong: ({ children }) => (
+      <strong className={`font-extrabold ${darkMode ? 'text-white' : 'text-neutral-900'}`}>
+        {children}
+      </strong>
+    ),
+  };
 
   const fetchPosts = async () => {
     try {
@@ -140,7 +174,6 @@ export default function AboutDetail({ profile, onBack, darkMode, setDarkMode, se
 
   return (
     <div className={`min-h-screen ${darkMode ? 'bg-black text-white' : 'bg-white text-neutral-900'}`}>
-      {/* FIXED: Passing onCloseAbout into Navbar so clicking any link closes the About view and navigates to the section */}
       <Navbar 
         darkMode={darkMode} 
         setDarkMode={setDarkMode} 
@@ -176,6 +209,8 @@ export default function AboutDetail({ profile, onBack, darkMode, setDarkMode, se
             {posts.map((post) => {
               const mainCarouselId = `carousel-main-${post._id}`;
               const isCommentsOpen = openCommentsPostId === post._id;
+              const isExpanded = !!expandedPosts[post._id];
+              const isLongPost = (post.content?.length || 0) > 220;
 
               return (
                 <article
@@ -203,10 +238,33 @@ export default function AboutDetail({ profile, onBack, darkMode, setDarkMode, se
                     </div>
                   </div>
 
-                  {/* Main Post Content & Media */}
-                  <p className={`text-base leading-relaxed whitespace-pre-line ${darkMode ? 'text-neutral-200' : 'text-neutral-800'}`}>
-                    {post.content}
-                  </p>
+                  {/* Main Post Content with See More & Markdown Bold */}
+                  <div>
+                    <div className={!isExpanded ? 'line-clamp-3 overflow-hidden' : ''}>
+                      <ReactMarkdown components={markdownComponents}>
+                        {formatMarkdownText(post.content)}
+                      </ReactMarkdown>
+                    </div>
+
+                    {isLongPost && (
+                      <button
+                        type="button"
+                        onClick={() => toggleExpandPost(post._id)}
+                        className="mt-1 inline-flex items-center gap-1 text-xs font-bold text-sky-500 hover:text-sky-400 transition-colors"
+                      >
+                        {isExpanded ? (
+                          <>
+                            Show less <ChevronUp className="w-3.5 h-3.5" />
+                          </>
+                        ) : (
+                          <>
+                            See more... <ChevronDown className="w-3.5 h-3.5" />
+                          </>
+                        )}
+                      </button>
+                    )}
+                  </div>
+
                   {renderMediaCarousel(post.media, mainCarouselId)}
 
                   {/* Chained Thread Sub-Posts */}
@@ -214,6 +272,10 @@ export default function AboutDetail({ profile, onBack, darkMode, setDarkMode, se
                     <div className="space-y-6 pt-2">
                       {post.threadItems.map((item, index) => {
                         const threadCarouselId = `carousel-thread-${post._id}-${index}`;
+                        const threadKey = `${post._id}-thread-${index}`;
+                        const isThreadExpanded = !!expandedPosts[threadKey];
+                        const isLongThread = (item.content?.length || 0) > 220;
+
                         return (
                           <div key={index} className="relative pl-6 border-l-2 border-sky-500/30 space-y-3">
                             <div className="flex items-center gap-2">
@@ -223,9 +285,31 @@ export default function AboutDetail({ profile, onBack, darkMode, setDarkMode, se
                               <span className="text-xs font-bold opacity-60">Thread part {index + 2}</span>
                             </div>
 
-                            <p className={`text-base leading-relaxed whitespace-pre-line ${darkMode ? 'text-neutral-200' : 'text-neutral-800'}`}>
-                              {item.content}
-                            </p>
+                            <div>
+                              <div className={!isThreadExpanded ? 'line-clamp-3 overflow-hidden' : ''}>
+                                <ReactMarkdown components={markdownComponents}>
+                                  {formatMarkdownText(item.content)}
+                                </ReactMarkdown>
+                              </div>
+
+                              {isLongThread && (
+                                <button
+                                  type="button"
+                                  onClick={() => toggleExpandPost(threadKey)}
+                                  className="mt-1 inline-flex items-center gap-1 text-xs font-bold text-sky-500 hover:text-sky-400 transition-colors"
+                                >
+                                  {isThreadExpanded ? (
+                                    <>
+                                      Show less <ChevronUp className="w-3.5 h-3.5" />
+                                    </>
+                                  ) : (
+                                    <>
+                                      See more... <ChevronDown className="w-3.5 h-3.5" />
+                                    </>
+                                  )}
+                                </button>
+                              )}
+                            </div>
 
                             {renderMediaCarousel(item.media, threadCarouselId)}
                           </div>
