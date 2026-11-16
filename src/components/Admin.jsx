@@ -13,9 +13,11 @@ export default function Admin({ token, setToken, darkMode, setDarkMode }) {
   const [credentials, setCredentials] = useState({ username: '', password: '' });
   const [loginError, setLoginError] = useState('');
 
-  // 1. Profile Header & Photos State
+  // 1. Profile Header, Photos & CV State
   const [avatarFile, setAvatarFile] = useState(null);
   const [bannerFile, setBannerFile] = useState(null);
+  const [cvFile, setCvFile] = useState(null);
+  const [currentCvUrl, setCurrentCvUrl] = useState('');
   const [bioShort, setBioShort] = useState('');
   const [headerLoading, setHeaderLoading] = useState(false);
   const [headerMsg, setHeaderMsg] = useState('');
@@ -53,6 +55,7 @@ export default function Admin({ token, setToken, darkMode, setDarkMode }) {
 
       const profileRes = await axios.get(`${API_BASE_URL}/api/profile`);
       if (profileRes.data?.bioShort) setBioShort(profileRes.data.bioShort);
+      if (profileRes.data?.cvUrl) setCurrentCvUrl(profileRes.data.cvUrl);
 
       const aboutRes = await axios.get(`${API_BASE_URL}/api/about-posts`);
       setExistingAboutPosts(aboutRes.data);
@@ -155,7 +158,7 @@ export default function Admin({ token, setToken, darkMode, setDarkMode }) {
     setProjectUpdates(updated);
   };
 
-  // --- PROFILE HEADER SUBMIT ---
+  // --- PROFILE HEADER & CV SUBMIT ---
   const handleUpdateHeaderPhotos = async (e) => {
     e.preventDefault();
     setHeaderLoading(true);
@@ -164,6 +167,7 @@ export default function Admin({ token, setToken, darkMode, setDarkMode }) {
     const formData = new FormData();
     if (avatarFile) formData.append('avatar', avatarFile);
     if (bannerFile) formData.append('banner', bannerFile);
+    if (cvFile) formData.append('cv', cvFile);
     formData.append('bioShort', bioShort);
 
     try {
@@ -175,9 +179,13 @@ export default function Admin({ token, setToken, darkMode, setDarkMode }) {
       });
 
       if (res.data.success) {
-        setHeaderMsg('Profile photos & short bio updated!');
+        setHeaderMsg('Profile photos, CV & short bio updated!');
         setAvatarFile(null);
         setBannerFile(null);
+        setCvFile(null);
+        if (res.data.profile?.cvUrl) {
+          setCurrentCvUrl(res.data.profile.cvUrl);
+        }
       }
     } catch (err) {
       setHeaderMsg(err.response?.data?.error || 'Failed to update profile header');
@@ -489,13 +497,15 @@ export default function Admin({ token, setToken, darkMode, setDarkMode }) {
           handleDeleteMessage={handleDeleteMessage}
         />
 
-        {/* SECTION 2: PROFILE HEADER & PHOTOS */}
+        {/* SECTION 2: PROFILE HEADER, PHOTOS & CV */}
         <AdminProfileHeader
           darkMode={darkMode}
           bioShort={bioShort}
           setBioShort={setBioShort}
           setAvatarFile={setAvatarFile}
           setBannerFile={setBannerFile}
+          setCvFile={setCvFile}
+          currentCvUrl={currentCvUrl}
           headerLoading={headerLoading}
           headerMsg={headerMsg}
           handleUpdateHeaderPhotos={handleUpdateHeaderPhotos}

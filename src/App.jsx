@@ -19,7 +19,8 @@ import {
   Send,
   X as CloseIcon,
   Maximize2,
-  ArrowRight
+  ArrowRight,
+  FileText
 } from 'lucide-react';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
@@ -189,11 +190,25 @@ function Home({ darkMode, setDarkMode, profile, projects, loadingProjects, setPr
         </button>
       </section>
 
-      {/* Skills Section */}
+      {/* Skills Section + CV Download */}
       <section id="skills" className={`max-w-5xl mx-auto px-6 py-12 border-t ${darkMode ? 'border-neutral-900' : 'border-neutral-200'}`}>
-        <h2 className="text-2xl font-bold mb-8 flex items-center gap-2">
-          <Wrench className="w-6 h-6 text-sky-500"/> Tech Stack & Capabilities
-        </h2>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+          <h2 className="text-2xl font-bold flex items-center gap-2">
+            <Wrench className="w-6 h-6 text-sky-500"/> Tech Stack & Capabilities
+          </h2>
+
+          {profile.cvUrl && (
+            <a
+              href={profile.cvUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-sky-500/10 text-sky-500 border border-sky-500/30 hover:bg-sky-500 hover:text-white font-bold text-sm transition-all self-start sm:self-auto"
+            >
+              <FileText className="w-4 h-4" /> View / Download CV
+            </a>
+          )}
+        </div>
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {skillCategories.map((cat, idx) => {
             const IconComponent = cat.icon;
@@ -251,12 +266,11 @@ function Home({ darkMode, setDarkMode, profile, projects, loadingProjects, setPr
         <ContactForm darkMode={darkMode} />
       </section>
 
-      {/* Updated Inline Footer */}
+      {/* Footer */}
       <footer className={`border-t transition-colors duration-200 ${
         darkMode ? 'bg-black border-neutral-800 text-white' : 'bg-white border-neutral-200 text-neutral-900'
       }`}>
         <div className="max-w-5xl mx-auto px-6 py-12">
-          {/* Main 3-Column Content Grid */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-start pb-10 border-b border-neutral-200 dark:border-neutral-800">
             
             {/* Column 1: Brand & Tagline */}
@@ -364,7 +378,7 @@ export default function App() {
   
   const [projects, setProjects] = useState([]);
   const [loadingProjects, setLoadingProjects] = useState(true);
-  const [profile, setProfile] = useState({ avatarUrl: '', bannerUrl: '', bioShort: '', bioFull: '' });
+  const [profile, setProfile] = useState({ avatarUrl: '', bannerUrl: '', cvUrl: '', bioShort: '', bioFull: '' });
   const [previewImage, setPreviewImage] = useState(null);
 
   const navigate = useNavigate();
@@ -409,6 +423,7 @@ export default function App() {
       <AboutDetail
         profile={profile}
         onBack={() => setViewAboutPage(false)}
+        onCloseAbout={() => setViewAboutPage(false)}
         darkMode={darkMode}
         setDarkMode={setDarkMode}
       />
