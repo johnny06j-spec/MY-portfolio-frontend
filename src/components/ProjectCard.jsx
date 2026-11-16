@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
 import ReactMarkdown from 'react-markdown';
-import { ArrowUpRight, BookOpen, ChevronLeft, ChevronRight, Maximize2, X } from 'lucide-react';
+import { ArrowUpRight, BookOpen, ChevronLeft, ChevronRight, Maximize2, X, ChevronDown, ChevronUp } from 'lucide-react';
 
 export default function ProjectCard({ project, darkMode, onViewDetail }) {
   const [activeMediaIndex, setActiveMediaIndex] = useState(0);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(false);
   const mediaList = project.media || [];
 
   const handleNext = (e) => {
@@ -28,19 +29,21 @@ export default function ProjectCard({ project, darkMode, onViewDetail }) {
       .replace(/\s+\*\*/g, '**');
   };
 
-  // Custom styling rules for Markdown components inside ProjectCard
+  // Keep strong inline so mid-sentence bold words don't break onto new lines
   const markdownComponents = {
     p: ({ children }) => (
-      <div className={`text-sm leading-relaxed mb-3 whitespace-pre-line ${darkMode ? 'text-neutral-400' : 'text-neutral-600'}`}>
+      <p className={`text-sm leading-relaxed mb-3 whitespace-pre-line ${darkMode ? 'text-neutral-400' : 'text-neutral-600'}`}>
         {children}
-      </div>
+      </p>
     ),
     strong: ({ children }) => (
-      <strong className={`font-bold block my-1 ${darkMode ? 'text-white' : 'text-neutral-900'}`}>
+      <strong className={`font-bold ${darkMode ? 'text-white' : 'text-neutral-900'}`}>
         {children}
       </strong>
     ),
   };
+
+  const isLongDescription = (project.description?.length || 0) > 220;
 
   return (
     <>
@@ -66,7 +69,7 @@ export default function ProjectCard({ project, darkMode, onViewDetail }) {
                   className="w-full max-h-[450px] object-contain"
                 />
               ) : (
-                <div 
+                <div
                   className="relative w-full h-full flex items-center justify-center cursor-pointer overflow-hidden"
                   onClick={() => setIsModalOpen(true)}
                 >
@@ -183,11 +186,31 @@ export default function ProjectCard({ project, darkMode, onViewDetail }) {
           </div>
         </div>
 
-        {/* Formatted Description with ReactMarkdown */}
+        {/* Collapsible Description with See More / Show Less */}
         <div className="mb-6">
-          <ReactMarkdown components={markdownComponents}>
-            {formatMarkdownText(project.description)}
-          </ReactMarkdown>
+          <div className={!isExpanded ? 'line-clamp-3 overflow-hidden' : ''}>
+            <ReactMarkdown components={markdownComponents}>
+              {formatMarkdownText(project.description)}
+            </ReactMarkdown>
+          </div>
+
+          {isLongDescription && (
+            <button
+              type="button"
+              onClick={() => setIsExpanded(!isExpanded)}
+              className="mt-1 inline-flex items-center gap-1 text-xs font-bold text-sky-500 hover:text-sky-400 transition-colors"
+            >
+              {isExpanded ? (
+                <>
+                  Show less <ChevronUp className="w-3.5 h-3.5" />
+                </>
+              ) : (
+                <>
+                  See more... <ChevronDown className="w-3.5 h-3.5" />
+                </>
+              )}
+            </button>
+          )}
         </div>
 
         {/* Tech Stack List */}
