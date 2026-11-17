@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import { GoogleLogin } from '@react-oauth/google';
 import Navbar from './Navbar';
 import heroImg from '../assets/hero.png';
 import { 
@@ -14,7 +15,8 @@ import {
   X,
   Pin,
   ChevronDown,
-  ChevronUp
+  ChevronUp,
+  LogOut
 } from 'lucide-react';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
@@ -28,16 +30,44 @@ const getVisitorId = () => {
   return id;
 };
 
+// Decode Google JWT credential payload to extract name, email, and picture
+const decodeGoogleJwt = (token) => {
+  try {
+    const base64Url = token.split('.')[1];
+    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+    const jsonPayload = decodeURIComponent(
+      atob(base64)
+        .split('')
+        .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+        .join('')
+    );
+    return JSON.parse(jsonPayload);
+  } catch {
+    return null;
+  }
+};
+
 export default function AboutDetail({ profile, onBack, darkMode, setDarkMode, setViewAdmin, onCloseAbout }) {
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [replyModalPost, setReplyModalPost] = useState(null);
   const [expandedComments, setExpandedComments] = useState({});
   const [commentText, setCommentText] = useState('');
-  const [commentAuthor, setCommentAuthor] = useState('');
+  const [guestName, setGuestName] = useState('');
+  const [useGuestMode, setUseGuestMode] = useState(false);
   const [submittingReply, setSubmittingReply] = useState(false);
   const [previewMedia, setPreviewMedia] = useState(null);
   const [expandedPosts, setExpandedPosts] = useState({});
+
+  // Saved Google Visitor Profile ({ name, email, picture })
+  const [googleUser, setGoogleUser] = useState(() => {
+    try {
+      return JSON.parse(localStorage.getItem('portfolio_google_user') || 'null');
+    } catch {
+      return null;
+    }
+  });
+
   const [likedPostIds, setLikedPostIds] = useState(() => {
     try {
       return JSON.parse(localStorage.getItem('liked_about_posts') || '{}');
@@ -49,6 +79,25 @@ export default function AboutDetail({ profile, onBack, darkMode, setDarkMode, se
   const visitorId = getVisitorId();
   const handleCloseView = onCloseAbout || onBack;
   const avatarSrc = profile?.avatarUrl || heroImg;
+
+  const handleGoogleSuccess = (credentialResponse) => {
+    const decoded = decodeGoogleJwt(credentialResponse.credential);
+    if (decoded) {
+      const userObj = {
+        name: decoded.name || decoded.email?.split('@')[0] || 'Visitor',
+        email: decoded.email || '',
+        picture: decoded.picture || '',
+      };
+      setGoogleUser(userObj);
+      setUseGuestMode(false);
+      localStorage.setItem('portfolio_google_user', JSON.stringify(userObj));
+    }
+  };
+
+  const handleSignOutGoogle = () => {
+    setGoogleUser(null);
+    localStorage.removeItem('portfolio_google_user');
+  };
 
   const toggleExpandPost = (postId) => {
     setExpandedPosts((prev) => ({
@@ -64,11 +113,9 @@ export default function AboutDetail({ profile, onBack, darkMode, setDarkMode, se
     }));
   };
 
-  // Reliable inline **bold** parser that works even without surrounding spaces
   const renderFormattedText = (text) => {
     if (!text) return null;
 
-    // Normalize stray triple/quadruple asterisks and clean spacing around bold tags
     const cleaned = text
       .replace(/\*{3,}/g, '**')
       .replace(/([a-zA-Z0-9'’])\*\*([^*]+?)\*\*([a-zA-Z0-9])/g, '$1 **$2** $3')
@@ -100,7 +147,6 @@ export default function AboutDetail({ profile, onBack, darkMode, setDarkMode, se
       const fetchedPosts = res.data || [];
       setPosts(fetchedPosts);
 
-      // Sync liked state from backend likedBy array if available
       const syncedLikes = { ...likedPostIds };
       fetchedPosts.forEach((p) => {
         if (Array.isArray(p.likedBy)) {
@@ -110,7 +156,6 @@ export default function AboutDetail({ profile, onBack, darkMode, setDarkMode, se
       setLikedPostIds(syncedLikes);
       localStorage.setItem('liked_about_posts', JSON.stringify(syncedLikes));
 
-      // Increment visibility/views once per browser session per post
       const viewedSession = JSON.parse(sessionStorage.getItem('viewed_about_posts') || '{}');
       fetchedPosts.forEach(async (p) => {
         if (!viewedSession[p._id]) {
@@ -124,7 +169,7 @@ export default function AboutDetail({ profile, onBack, darkMode, setDarkMode, se
               );
             }
           } catch {
-            // Silent fail for view counter
+            // Silent fail
           }
         }
       });
@@ -168,10 +213,12 @@ export default function AboutDetail({ profile, onBack, darkMode, setDarkMode, se
 
     setSubmittingReply(true);
     const targetPostId = replyModalPost._id;
+    const resolvedAuthor = googleUser?.name || guestName.trim() || 'Visitor';
 
     try {
       const res = await axios.post(`${API_BASE_URL}/api/about-posts/${targetPostId}/comment`, {
-        author: commentAuthor.trim() || 'Visitor',
+        author: resolvedAuthor,
+        avatar: googleUser?.picture || '',
         text: commentText.trim(),
       });
 
@@ -301,7 +348,6 @@ export default function AboutDetail({ profile, onBack, darkMode, setDarkMode, se
                     darkMode ? 'bg-neutral-900/60 border-neutral-800' : 'bg-neutral-50 border-neutral-200'
                   }`}
                 >
-                  {/* Pinned Badge */}
                   {post.pinOrder > 0 && (
                     <div className="inline-flex items-center gap-1.5 text-xs font-bold text-amber-400 bg-amber-500/10 border border-amber-500/30 px-3 py-1 rounded-full mb-1">
                       <Pin className="w-3.5 h-3.5" />
@@ -325,7 +371,7 @@ export default function AboutDetail({ profile, onBack, darkMode, setDarkMode, se
                     </div>
                   </div>
 
-                  {/* Main Post Content with See More & Bold Support */}
+                  {/* Main Post Content */}
                   <div>
                     <div className={!isExpanded ? 'line-clamp-3 overflow-hidden' : ''}>
                       {renderFormattedText(post.content)}
@@ -405,7 +451,6 @@ export default function AboutDetail({ profile, onBack, darkMode, setDarkMode, se
                   <div className={`flex items-center justify-between pt-3 border-t text-xs sm:text-sm font-medium ${
                     darkMode ? 'border-neutral-800/80 text-neutral-400' : 'border-neutral-200 text-neutral-600'
                   }`}>
-                    {/* Reply (Opens X-style Reply Modal) */}
                     <button
                       type="button"
                       onClick={() => handleOpenReplyModal(post)}
@@ -418,7 +463,6 @@ export default function AboutDetail({ profile, onBack, darkMode, setDarkMode, se
                       <span>{commentCount}</span>
                     </button>
 
-                    {/* Like / Unlike Toggle */}
                     <button
                       type="button"
                       onClick={() => handleLike(post._id)}
@@ -435,7 +479,6 @@ export default function AboutDetail({ profile, onBack, darkMode, setDarkMode, se
                       <span>{post.likes || 0}</span>
                     </button>
 
-                    {/* Visibility / Views Counter */}
                     <div
                       className="flex items-center gap-1.5 hover:text-sky-500 transition-colors cursor-default"
                       title="Post Views"
@@ -447,7 +490,7 @@ export default function AboutDetail({ profile, onBack, darkMode, setDarkMode, se
                     </div>
                   </div>
 
-                  {/* Replies Thread Preview / Toggle */}
+                  {/* Replies Thread Preview */}
                   {commentCount > 0 && (
                     <div className={`pt-3 border-t ${darkMode ? 'border-neutral-800/80' : 'border-neutral-200'}`}>
                       <button
@@ -464,9 +507,13 @@ export default function AboutDetail({ profile, onBack, darkMode, setDarkMode, se
                         <div className="space-y-3 mt-2">
                           {post.comments.map((c, i) => (
                             <div key={i} className="flex gap-3 text-sm">
-                              <div className="w-8 h-8 rounded-full bg-neutral-700 text-white font-bold flex items-center justify-center text-xs flex-shrink-0">
-                                {(c.author || 'V').charAt(0).toUpperCase()}
-                              </div>
+                              {c.avatar ? (
+                                <img src={c.avatar} alt={c.author} className="w-8 h-8 rounded-full object-cover flex-shrink-0" />
+                              ) : (
+                                <div className="w-8 h-8 rounded-full bg-neutral-700 text-white font-bold flex items-center justify-center text-xs flex-shrink-0">
+                                  {(c.author || 'V').charAt(0).toUpperCase()}
+                                </div>
+                              )}
                               <div className={`flex-1 p-3 rounded-2xl border ${
                                 darkMode ? 'bg-black/50 border-neutral-800' : 'bg-white border-neutral-200'
                               }`}>
@@ -493,7 +540,7 @@ export default function AboutDetail({ profile, onBack, darkMode, setDarkMode, se
         )}
       </div>
 
-      {/* X-STYLE REPLY COMPOSER MODAL */}
+      {/* X-STYLE REPLY COMPOSER MODAL WITH 1-CLICK GOOGLE NAME */}
       {replyModalPost && (
         <div
           className="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-start justify-center pt-12 sm:pt-20 px-4"
@@ -549,45 +596,93 @@ export default function AboutDetail({ profile, onBack, darkMode, setDarkMode, se
                 </div>
               </div>
 
-              {/* Visitor Reply Input Row */}
-              <div className="flex gap-3">
-                <div className="w-10 h-10 rounded-full bg-sky-500/20 text-sky-500 font-extrabold flex items-center justify-center text-sm flex-shrink-0">
-                  {(commentAuthor.trim() || 'V').charAt(0).toUpperCase()}
-                </div>
-
-                <div className="flex-1 space-y-2">
-                  <input
-                    type="text"
-                    placeholder="Your name (optional)"
-                    value={commentAuthor}
-                    onChange={(e) => setCommentAuthor(e.target.value)}
-                    className={`w-full px-3 py-1.5 rounded-lg border text-xs focus:outline-none focus:border-sky-500 ${
-                      darkMode
-                        ? 'bg-neutral-900/70 border-neutral-800 text-white placeholder-neutral-500'
-                        : 'bg-neutral-50 border-neutral-200 text-black placeholder-neutral-400'
-                    }`}
-                  />
-
-                  <textarea
-                    rows="3"
-                    required
-                    autoFocus
-                    placeholder="Post your reply"
-                    value={commentText}
-                    onChange={(e) => setCommentText(e.target.value)}
-                    className={`w-full bg-transparent text-base sm:text-lg focus:outline-none resize-none ${
-                      darkMode ? 'text-white placeholder-neutral-500' : 'text-neutral-900 placeholder-neutral-400'
-                    }`}
+              {/* Google Identity Bar or 1-Click Sign-In */}
+              {!googleUser && !useGuestMode ? (
+                <div className={`p-3 rounded-xl border flex flex-col sm:flex-row items-center justify-between gap-3 ${
+                  darkMode ? 'bg-neutral-900/60 border-neutral-800' : 'bg-neutral-50 border-neutral-200'
+                }`}>
+                  <div className="text-xs">
+                    <p className="font-bold">Use your Google name automatically</p>
+                    <button
+                      type="button"
+                      onClick={() => setUseGuestMode(true)}
+                      className="text-neutral-500 hover:underline mt-0.5"
+                    >
+                      Or continue without signing in
+                    </button>
+                  </div>
+                  <GoogleLogin
+                    onSuccess={handleGoogleSuccess}
+                    onError={() => setUseGuestMode(true)}
+                    theme={darkMode ? 'filled_black' : 'outline'}
+                    shape="pill"
+                    size="medium"
                   />
                 </div>
-              </div>
+              ) : (
+                <div className="flex gap-3">
+                  {googleUser?.picture ? (
+                    <img
+                      src={googleUser.picture}
+                      alt={googleUser.name}
+                      className="w-10 h-10 rounded-full object-cover flex-shrink-0"
+                    />
+                  ) : (
+                    <div className="w-10 h-10 rounded-full bg-sky-500/20 text-sky-500 font-extrabold flex items-center justify-center text-sm flex-shrink-0">
+                      {(googleUser?.name || guestName.trim() || 'V').charAt(0).toUpperCase()}
+                    </div>
+                  )}
+
+                  <div className="flex-1 space-y-2">
+                    {googleUser ? (
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-bold text-sky-500">
+                          Replying as {googleUser.name}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={handleSignOutGoogle}
+                          className="inline-flex items-center gap-1 text-[11px] text-neutral-500 hover:text-rose-400"
+                          title="Switch account"
+                        >
+                          <LogOut className="w-3 h-3" /> Change
+                        </button>
+                      </div>
+                    ) : (
+                      <input
+                        type="text"
+                        placeholder="Your name (optional)"
+                        value={guestName}
+                        onChange={(e) => setGuestName(e.target.value)}
+                        className={`w-full px-3 py-1.5 rounded-lg border text-xs focus:outline-none focus:border-sky-500 ${
+                          darkMode
+                            ? 'bg-neutral-900/70 border-neutral-800 text-white placeholder-neutral-500'
+                            : 'bg-neutral-50 border-neutral-200 text-black placeholder-neutral-400'
+                        }`}
+                      />
+                    )}
+
+                    <textarea
+                      rows="3"
+                      required
+                      autoFocus
+                      placeholder="Post your reply"
+                      value={commentText}
+                      onChange={(e) => setCommentText(e.target.value)}
+                      className={`w-full bg-transparent text-base sm:text-lg focus:outline-none resize-none ${
+                        darkMode ? 'text-white placeholder-neutral-500' : 'text-neutral-900 placeholder-neutral-400'
+                      }`}
+                    />
+                  </div>
+                </div>
+              )}
 
               {/* Bottom Divider & X Rounded Reply Button */}
               <div className={`pt-3 border-t flex items-center justify-between ${
                 darkMode ? 'border-neutral-800' : 'border-neutral-200'
               }`}>
                 <span className="text-xs text-neutral-500">
-                  {commentText.length > 0 ? `${commentText.length} chars` : 'Everyone can see your reply'}
+                  Everyone can see your reply
                 </span>
 
                 <button
