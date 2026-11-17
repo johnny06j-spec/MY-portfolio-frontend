@@ -47,7 +47,15 @@ const decodeGoogleJwt = (token) => {
   }
 };
 
-export default function AboutDetail({ profile, onBack, darkMode, setDarkMode, setViewAdmin, onCloseAbout }) {
+export default function AboutDetail({
+  profile,
+  onBack,
+  darkMode,
+  setDarkMode,
+  setViewAdmin,
+  onCloseAbout,
+  onOpenBlog,
+}) {
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [replyModalPost, setReplyModalPost] = useState(null);
@@ -306,6 +314,7 @@ export default function AboutDetail({ profile, onBack, darkMode, setDarkMode, se
         setDarkMode={setDarkMode} 
         setViewAdmin={setViewAdmin} 
         onCloseAbout={handleCloseView}
+        onOpenBlog={onOpenBlog}
       />
 
       <div className="max-w-2xl mx-auto px-4 sm:px-6 py-10 space-y-8">

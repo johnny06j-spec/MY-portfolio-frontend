@@ -6,6 +6,7 @@ import Navbar from './components/Navbar';
 import ProjectCard from './components/ProjectCard';
 import ProjectDetail from './components/ProjectDetail';
 import AboutDetail from './components/AboutDetail';
+import BlogFeed from './components/BlogFeed';
 import ContactForm from './components/ContactForm';
 import heroImg from './assets/hero.png';
 import { 
@@ -48,7 +49,17 @@ const skillCategories = [
   }
 ];
 
-function Home({ darkMode, setDarkMode, profile, projects, loadingProjects, setPreviewImage, setSelectedProject, setViewAboutPage }) {
+function Home({
+  darkMode,
+  setDarkMode,
+  profile,
+  projects,
+  loadingProjects,
+  setPreviewImage,
+  setSelectedProject,
+  setViewAboutPage,
+  setViewBlogPage,
+}) {
   const scrollToContact = () => {
     const contactSection = document.getElementById('contact');
     if (contactSection) {
@@ -64,6 +75,7 @@ function Home({ darkMode, setDarkMode, profile, projects, loadingProjects, setPr
         darkMode={darkMode} 
         setDarkMode={setDarkMode} 
         onOpenAbout={() => setViewAboutPage(true)}
+        onOpenBlog={() => setViewBlogPage(true)}
       />
 
       {/* Hero Header Section */}
@@ -373,6 +385,7 @@ function Home({ darkMode, setDarkMode, profile, projects, loadingProjects, setPr
 export default function App() {
   const [darkMode, setDarkMode] = useState(false);
   const [viewAboutPage, setViewAboutPage] = useState(false);
+  const [viewBlogPage, setViewBlogPage] = useState(false);
   const [token, setToken] = useState(localStorage.getItem('adminToken') || null);
   const [selectedProject, setSelectedProject] = useState(null);
   
@@ -424,6 +437,25 @@ export default function App() {
         profile={profile}
         onBack={() => setViewAboutPage(false)}
         onCloseAbout={() => setViewAboutPage(false)}
+        onOpenBlog={() => {
+          setViewAboutPage(false);
+          setViewBlogPage(true);
+        }}
+        darkMode={darkMode}
+        setDarkMode={setDarkMode}
+      />
+    );
+  }
+
+  if (viewBlogPage) {
+    return (
+      <BlogFeed
+        profile={profile}
+        onBack={() => setViewBlogPage(false)}
+        onOpenAbout={() => {
+          setViewBlogPage(false);
+          setViewAboutPage(true);
+        }}
         darkMode={darkMode}
         setDarkMode={setDarkMode}
       />
@@ -456,6 +488,7 @@ export default function App() {
               setPreviewImage={setPreviewImage}
               setSelectedProject={setSelectedProject}
               setViewAboutPage={setViewAboutPage}
+              setViewBlogPage={setViewBlogPage}
             />
           } 
         />

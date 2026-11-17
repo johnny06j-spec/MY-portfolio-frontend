@@ -1,21 +1,28 @@
 import React, { useState } from 'react';
 import { Sun, Moon, Menu, X } from 'lucide-react';
 
-export default function Navbar({ darkMode, setDarkMode, onOpenAbout, onCloseAbout }) {
+export default function Navbar({
+  darkMode,
+  setDarkMode,
+  onOpenAbout,
+  onCloseAbout,
+  onOpenBlog,
+  onCloseBlog,
+}) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const closeMenu = () => setMobileMenuOpen(false);
 
+  const resetSubViews = () => {
+    if (onCloseAbout) onCloseAbout();
+    if (onCloseBlog) onCloseBlog();
+  };
+
   const handleNavClick = (e, sectionId) => {
     e.preventDefault();
     closeMenu();
+    resetSubViews();
 
-    // If on the dedicated About view, close it first to return to the home layout
-    if (onCloseAbout) {
-      onCloseAbout();
-    }
-
-    // Scroll to section on the home layout after view swap
     setTimeout(() => {
       if (sectionId === 'home') {
         window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -28,6 +35,18 @@ export default function Navbar({ darkMode, setDarkMode, onOpenAbout, onCloseAbou
         }
       }
     }, 50);
+  };
+
+  const handleOpenAboutClick = () => {
+    closeMenu();
+    if (onCloseBlog) onCloseBlog();
+    if (onOpenAbout) onOpenAbout();
+  };
+
+  const handleOpenBlogClick = () => {
+    closeMenu();
+    if (onCloseAbout) onCloseAbout();
+    if (onOpenBlog) onOpenBlog();
   };
 
   return (
@@ -46,37 +65,43 @@ export default function Navbar({ darkMode, setDarkMode, onOpenAbout, onCloseAbou
         </a>
         
         {/* Desktop Links */}
-        <div className="hidden md:flex items-center gap-8 text-sm font-bold">
+        <div className="hidden md:flex items-center gap-7 text-sm font-bold">
           <a 
             href="/#home" 
-            onClick={(e) => handleNavClick(e, 'home')}
+            onClick={(e) => handleNavClick(e, 'home')} 
             className={`transition-colors ${darkMode ? 'text-neutral-300 hover:text-white' : 'text-neutral-700 hover:text-black'}`}
           >
             Home
           </a>
           <button 
-            onClick={() => { if (onOpenAbout) onOpenAbout(); closeMenu(); }} 
+            onClick={handleOpenAboutClick} 
             className={`font-bold transition-colors ${darkMode ? 'text-neutral-300 hover:text-white' : 'text-neutral-700 hover:text-black'}`}
           >
             About
           </button>
           <a 
             href="/#skills" 
-            onClick={(e) => handleNavClick(e, 'skills')}
+            onClick={(e) => handleNavClick(e, 'skills')} 
             className={`transition-colors ${darkMode ? 'text-neutral-300 hover:text-white' : 'text-neutral-700 hover:text-black'}`}
           >
             Capabilities
           </a>
           <a 
             href="/#projects" 
-            onClick={(e) => handleNavClick(e, 'projects')}
+            onClick={(e) => handleNavClick(e, 'projects')} 
             className={`transition-colors ${darkMode ? 'text-neutral-300 hover:text-white' : 'text-neutral-700 hover:text-black'}`}
           >
             Projects
           </a>
+          <button 
+            onClick={handleOpenBlogClick} 
+            className={`font-bold transition-colors ${darkMode ? 'text-neutral-300 hover:text-white' : 'text-neutral-700 hover:text-black'}`}
+          >
+            Blog
+          </button>
           <a 
             href="/#contact" 
-            onClick={(e) => handleNavClick(e, 'contact')}
+            onClick={(e) => handleNavClick(e, 'contact')} 
             className={`transition-colors ${darkMode ? 'text-neutral-300 hover:text-white' : 'text-neutral-700 hover:text-black'}`}
           >
             Contact
@@ -95,8 +120,7 @@ export default function Navbar({ darkMode, setDarkMode, onOpenAbout, onCloseAbou
             {darkMode ? <Sun className="w-5 h-5"/> : <Moon className="w-5 h-5"/>}
           </button>
 
-          {/* Mobile Hamburger Toggle */}
-          <button
+          <button 
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             className={`md:hidden p-2 rounded-xl border transition-all ${
               darkMode ? 'bg-neutral-900 border-neutral-800 text-neutral-200' : 'bg-neutral-100 border-neutral-300 text-neutral-800'
@@ -121,7 +145,7 @@ export default function Navbar({ darkMode, setDarkMode, onOpenAbout, onCloseAbou
             Home
           </a>
           <button 
-            onClick={() => { if (onOpenAbout) onOpenAbout(); closeMenu(); }} 
+            onClick={handleOpenAboutClick} 
             className="block text-base font-bold py-1 hover:text-sky-500 transition-colors text-left w-full"
           >
             About
@@ -140,6 +164,12 @@ export default function Navbar({ darkMode, setDarkMode, onOpenAbout, onCloseAbou
           >
             Projects
           </a>
+          <button 
+            onClick={handleOpenBlogClick} 
+            className="block text-base font-bold py-1 hover:text-sky-500 transition-colors text-left w-full"
+          >
+            Blog
+          </button>
           <a 
             href="/#contact" 
             onClick={(e) => handleNavClick(e, 'contact')} 

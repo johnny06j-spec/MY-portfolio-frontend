@@ -1,17 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Lock, LogOut, Sun, Moon } from 'lucide-react';
+import { Lock, LogOut, Sun, Moon, LayoutDashboard, Sparkles } from 'lucide-react';
 
 import AdminMessages from './admin/AdminMessages';
 import AdminProfileHeader from './admin/AdminProfileHeader';
 import AdminAboutPosts from './admin/AdminAboutPosts';
 import AdminProjects from './admin/AdminProjects';
+import AdminBlogPosts from './admin/AdminBlogPosts';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
 export default function Admin({ token, setToken, darkMode, setDarkMode }) {
   const [credentials, setCredentials] = useState({ username: '', password: '' });
   const [loginError, setLoginError] = useState('');
+  const [activeAdminTab, setActiveAdminTab] = useState('portfolio'); // 'portfolio' | 'blog'
 
   // 1. Profile Header, Photos & CV State
   const [avatarFile, setAvatarFile] = useState(null);
@@ -48,6 +50,9 @@ export default function Admin({ token, setToken, darkMode, setDarkMode }) {
   const [editingProjectId, setEditingProjectId] = useState(null);
   const [projectUpdates, setProjectUpdates] = useState([]);
 
+  // 5. Blog Posts State
+  const [existingBlogPosts, setExistingBlogPosts] = useState([]);
+
   const fetchAdminData = async () => {
     try {
       const projRes = await axios.get(`${API_BASE_URL}/api/projects`);
@@ -59,6 +64,9 @@ export default function Admin({ token, setToken, darkMode, setDarkMode }) {
 
       const aboutRes = await axios.get(`${API_BASE_URL}/api/about-posts`);
       setExistingAboutPosts(aboutRes.data);
+
+      const blogRes = await axios.get(`${API_BASE_URL}/api/blog-posts`);
+      setExistingBlogPosts(blogRes.data);
 
       const msgRes = await axios.get(`${API_BASE_URL}/api/messages`, {
         headers: { Authorization: `Bearer ${token}` },
@@ -111,7 +119,7 @@ export default function Admin({ token, setToken, darkMode, setDarkMode }) {
         headers: { Authorization: `Bearer ${token}` },
       });
       fetchAdminData();
-    } catch (err) {
+    } catch {
       alert('Failed to delete message.');
     }
   };
@@ -301,7 +309,7 @@ export default function Admin({ token, setToken, darkMode, setDarkMode }) {
       });
       if (editingAboutId === id) resetAboutPostForm();
       fetchAdminData();
-    } catch (err) {
+    } catch {
       alert('Failed to delete post');
     }
   };
@@ -465,10 +473,10 @@ export default function Admin({ token, setToken, darkMode, setDarkMode }) {
       darkMode ? 'bg-black text-white' : 'bg-white text-neutral-900'
     }`}>
       <div className="max-w-4xl mx-auto space-y-8">
-        <div className={`flex justify-between items-center border-b pb-6 ${darkMode ? 'border-neutral-800' : 'border-neutral-200'}`}>
+        <div className={`flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 border-b pb-6 ${darkMode ? 'border-neutral-800' : 'border-neutral-200'}`}>
           <div>
             <h1 className="text-3xl font-bold">Portfolio Control Center</h1>
-            <p className="opacity-60 text-sm">Manage projects, profile details, messages, and publish thread posts.</p>
+            <p className="opacity-60 text-sm">Manage your portfolio, projects, and lifestyle blog separately.</p>
           </div>
           <div className="flex items-center gap-3">
             {setDarkMode && (
@@ -489,81 +497,123 @@ export default function Admin({ token, setToken, darkMode, setDarkMode }) {
           </div>
         </div>
 
-        {/* SECTION 1: INCOMING MESSAGES */}
-        <AdminMessages
-          messagesList={messagesList}
-          darkMode={darkMode}
-          handleToggleRead={handleToggleRead}
-          handleDeleteMessage={handleDeleteMessage}
-        />
+        {/* CONTROL CENTER SUB-NAVBAR (Separates Portfolio CMS from Blog Studio) */}
+        <div className={`flex gap-2 p-1.5 rounded-2xl border ${
+          darkMode ? 'bg-neutral-900/70 border-neutral-800' : 'bg-neutral-100 border-neutral-200'
+        }`}>
+          <button
+            type="button"
+            onClick={() => setActiveAdminTab('portfolio')}
+            className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl text-sm font-bold transition-all ${
+              activeAdminTab === 'portfolio'
+                ? 'bg-sky-500 text-white shadow-md shadow-sky-500/20'
+                : darkMode
+                ? 'text-neutral-400 hover:text-white'
+                : 'text-neutral-600 hover:text-black'
+            }`}
+          >
+            <LayoutDashboard className="w-4 h-4" /> Portfolio & Projects
+          </button>
 
-        {/* SECTION 2: PROFILE HEADER, PHOTOS & CV */}
-        <AdminProfileHeader
-          darkMode={darkMode}
-          bioShort={bioShort}
-          setBioShort={setBioShort}
-          setAvatarFile={setAvatarFile}
-          setBannerFile={setBannerFile}
-          setCvFile={setCvFile}
-          currentCvUrl={currentCvUrl}
-          headerLoading={headerLoading}
-          headerMsg={headerMsg}
-          handleUpdateHeaderPhotos={handleUpdateHeaderPhotos}
-        />
+          <button
+            type="button"
+            onClick={() => setActiveAdminTab('blog')}
+            className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl text-sm font-bold transition-all ${
+              activeAdminTab === 'blog'
+                ? 'bg-sky-500 text-white shadow-md shadow-sky-500/20'
+                : darkMode
+                ? 'text-neutral-400 hover:text-white'
+                : 'text-neutral-600 hover:text-black'
+            }`}
+          >
+            <Sparkles className="w-4 h-4" /> Blog & Lifestyle Studio ({existingBlogPosts.length})
+          </button>
+        </div>
 
-        {/* SECTION 3: ABOUT PAGE THREAD PUBLISHER */}
-        <AdminAboutPosts
-          darkMode={darkMode}
-          aboutPostContent={aboutPostContent}
-          setAboutPostContent={setAboutPostContent}
-          aboutMediaFiles={aboutMediaFiles}
-          setAboutMediaFiles={setAboutMediaFiles}
-          aboutPostLoading={aboutPostLoading}
-          aboutPostMsg={aboutPostMsg}
-          existingAboutPosts={existingAboutPosts}
-          editingAboutId={editingAboutId}
-          threadSteps={threadSteps}
-          handleAddThreadStep={handleAddThreadStep}
-          handleRemoveThreadStep={handleRemoveThreadStep}
-          handleThreadStepChange={handleThreadStepChange}
-          handleThreadFilesChange={handleThreadFilesChange}
-          handlePublishOrUpdateAboutPost={handlePublishOrUpdateAboutPost}
-          handleStartEditAboutPost={handleStartEditAboutPost}
-          resetAboutPostForm={resetAboutPostForm}
-          handleDeleteAboutPost={handleDeleteAboutPost}
-          handleUpdatePin={handleUpdatePin}
-        />
+        {/* TAB 1: PORTFOLIO & PROJECTS */}
+        {activeAdminTab === 'portfolio' ? (
+          <>
+            <AdminMessages
+              messagesList={messagesList}
+              darkMode={darkMode}
+              handleToggleRead={handleToggleRead}
+              handleDeleteMessage={handleDeleteMessage}
+            />
 
-        {/* SECTION 4: PROJECTS MANAGEMENT */}
-        <AdminProjects
-          darkMode={darkMode}
-          title={title}
-          setTitle={setTitle}
-          category={category}
-          setCategory={setCategory}
-          description={description}
-          setDescription={setDescription}
-          liveUrl={liveUrl}
-          setLiveUrl={setLiveUrl}
-          tags={tags}
-          setTags={setTags}
-          highlights={highlights}
-          setHighlights={setHighlights}
-          setMediaFiles={setMediaFiles}
-          loading={loading}
-          message={message}
-          existingProjects={existingProjects}
-          editingProjectId={editingProjectId}
-          projectUpdates={projectUpdates}
-          handleAddProjectUpdate={handleAddProjectUpdate}
-          handleRemoveProjectUpdate={handleRemoveProjectUpdate}
-          handleProjectUpdateChange={handleProjectUpdateChange}
-          handleProjectUpdateFilesChange={handleProjectUpdateFilesChange}
-          handlePublishOrUpdateProject={handlePublishOrUpdateProject}
-          handleStartEditProject={handleStartEditProject}
-          resetProjectForm={resetProjectForm}
-          handleDeleteProject={handleDeleteProject}
-        />
+            <AdminProfileHeader
+              darkMode={darkMode}
+              bioShort={bioShort}
+              setBioShort={setBioShort}
+              setAvatarFile={setAvatarFile}
+              setBannerFile={setBannerFile}
+              setCvFile={setCvFile}
+              currentCvUrl={currentCvUrl}
+              headerLoading={headerLoading}
+              headerMsg={headerMsg}
+              handleUpdateHeaderPhotos={handleUpdateHeaderPhotos}
+            />
+
+            <AdminAboutPosts
+              darkMode={darkMode}
+              aboutPostContent={aboutPostContent}
+              setAboutPostContent={setAboutPostContent}
+              aboutMediaFiles={aboutMediaFiles}
+              setAboutMediaFiles={setAboutMediaFiles}
+              aboutPostLoading={aboutPostLoading}
+              aboutPostMsg={aboutPostMsg}
+              existingAboutPosts={existingAboutPosts}
+              editingAboutId={editingAboutId}
+              threadSteps={threadSteps}
+              handleAddThreadStep={handleAddThreadStep}
+              handleRemoveThreadStep={handleRemoveThreadStep}
+              handleThreadStepChange={handleThreadStepChange}
+              handleThreadFilesChange={handleThreadFilesChange}
+              handlePublishOrUpdateAboutPost={handlePublishOrUpdateAboutPost}
+              handleStartEditAboutPost={handleStartEditAboutPost}
+              resetAboutPostForm={resetAboutPostForm}
+              handleDeleteAboutPost={handleDeleteAboutPost}
+              handleUpdatePin={handleUpdatePin}
+            />
+
+            <AdminProjects
+              darkMode={darkMode}
+              title={title}
+              setTitle={setTitle}
+              category={category}
+              setCategory={setCategory}
+              description={description}
+              setDescription={setDescription}
+              liveUrl={liveUrl}
+              setLiveUrl={setLiveUrl}
+              tags={tags}
+              setTags={setTags}
+              highlights={highlights}
+              setHighlights={setHighlights}
+              setMediaFiles={setMediaFiles}
+              loading={loading}
+              message={message}
+              existingProjects={existingProjects}
+              editingProjectId={editingProjectId}
+              projectUpdates={projectUpdates}
+              handleAddProjectUpdate={handleAddProjectUpdate}
+              handleRemoveProjectUpdate={handleRemoveProjectUpdate}
+              handleProjectUpdateChange={handleProjectUpdateChange}
+              handleProjectUpdateFilesChange={handleProjectUpdateFilesChange}
+              handlePublishOrUpdateProject={handlePublishOrUpdateProject}
+              handleStartEditProject={handleStartEditProject}
+              resetProjectForm={resetProjectForm}
+              handleDeleteProject={handleDeleteProject}
+            />
+          </>
+        ) : (
+          /* TAB 2: DEDICATED BLOG & LIFESTYLE STUDIO */
+          <AdminBlogPosts
+            token={token}
+            darkMode={darkMode}
+            existingBlogPosts={existingBlogPosts}
+            onRefresh={fetchAdminData}
+          />
+        )}
       </div>
     </div>
   );
